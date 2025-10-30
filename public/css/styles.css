@@ -1,0 +1,287 @@
+/* Reset de márgenes y altura completa */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Body como contenedor flexible para apilar elementos sin espacios */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ===== ESTILOS DEL ENCABEZADO ===== */
+.header {
+    background-color: #0077B6;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 1.3rem;
+    /* ALTURA FIJA PARA EL HEADER */
+    height: 70px;
+    display: flex;
+    align-items: center;
+}
+
+/* Contenedor personalizado para el header */
+.custom-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    width: 100%;
+    height: 100%;
+}
+
+.logo {
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-logo {
+    height: 105px; 
+    width: auto;
+    object-fit: contain; 
+}
+
+/* Navegación centrada pero desplazada a la derecha */
+.nav {
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+    /* MARGEN IZQUIERDO PARA DESPLAZAR LA NAVEGACIÓN A LA DERECHA */
+    margin-left: 60px; /* Ajusta este valor según cuánto quieras moverlo */
+}
+
+.nav-link {
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.3rem;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+    margin: 0 25px;
+}
+
+.nav-link:hover {
+    color: #F0F0F0;
+    text-decoration: none;
+}
+
+.auth-buttons {
+    margin-right: 20px;
+    gap: 10px;
+}
+
+.auth-btn {
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-outline-light {
+    border: 2px solid #fff;
+}
+
+.btn-outline-light:hover {
+    background-color: #fff;
+    color: #0077B6;
+    border-color: #fff;
+}
+
+.btn-light {
+    background-color: #fff;
+    color: #0077B6;
+    border: 2px solid #fff;
+}
+
+.btn-light:hover {
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+    color: #005a8c;
+}
+
+/* ===== CONTENIDO PRINCIPAL ===== */
+.main-content {
+    flex: 1 0 auto;
+    background-color: #F0F0F0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Estilos del hero section */
+.hero {
+    padding: 3rem 0;
+    min-height: calc(100vh - 70px); 
+    display: flex;
+    align-items: center;
+}
+
+.hero h1 {
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-size: 3rem;
+    letter-spacing: 0.5px;
+}
+
+.hero .lead {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #6c757d;
+    font-weight: 400;
+}
+
+.main-image {
+    max-height: 500px;
+    width: 100%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* ===== ESTILOS DEL PIE DE PÁGINA ===== */
+.footer {
+    background-color: #343a40;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #7CF023;
+    text-decoration: none;
+}
+
+/* ===== ESTILOS RESPONSIVOS ===== */
+@media (max-width: 768px) {
+    .header {
+        height: auto; 
+        padding: 10px 0;
+    }
+    
+    .custom-header-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 10px;
+        height: auto;
+    }
+    
+    .logo, .nav, .auth-buttons {
+        margin: 3px 0;
+    }
+    
+    .nav {
+        order: 2;
+        width: 100%;
+        justify-content: space-around;
+        /* RESETEAMOS EL MARGEN EN MÓVIL */
+        margin-left: 0;
+    }
+    
+    .auth-buttons {
+        order: 3;
+        margin-right: 0;
+    }
+    
+    .hero {
+        text-align: center;
+        padding: 2rem 0;
+        min-height: auto;
+    }
+    
+    .hero img {
+        margin-top: 2rem;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .main-image {
+        max-height: 400px;
+    }
+    
+    .footer {
+        font-size: 1.1rem;
+    }
+    
+    .footer-link {
+        font-size: 1.1rem;
+    }
+    
+    /* Ajustes para móviles */
+    .header-logo {
+        height: 45px;
+        max-height: none; 
+    }
+    
+    .nav-link {
+        font-size: 1.2rem;
+        margin: 0 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .header {
+        padding: 8px 0;
+        font-size: 1.2rem;
+    }
+    
+    .header-logo {
+        height: 40px;
+    }
+    
+    .nav-link {
+        font-size: 1.1rem;
+        margin: 0 10px;
+    }
+    
+    .auth-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .auth-btn {
+        width: 100%;
+        margin: 2px 0;
+    }
+    
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .hero .lead {
+        font-size: 1rem;
+    }
+    
+    .footer {
+        font-size: 1rem;
+        padding: 1rem 0;
+    }
+    
+    .footer-link {
+        font-size: 1rem;
+    }
+    
+    .main-image {
+        max-height: 300px;
+    }
+}

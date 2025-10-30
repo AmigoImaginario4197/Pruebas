@@ -1,0 +1,207 @@
+/* Reset de márgenes y altura completa */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Body como contenedor flexible para apilar elementos sin espacios */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ===== ESTILOS DEL ENCABEZADO ===== */
+.header {
+    background-color: #0077B6;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Elementos del header con tamaños controlados - TAMAÑOS ADECUADOS */
+.header-logo {
+    height: 45px !important; /* Forzar tamaño */
+    width: auto !important;
+}
+
+.header-icon {
+    height: 22px !important; /* Forzar tamaño */
+    width: auto !important;
+}
+
+/* Enlaces de navegación */
+.nav a {
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+}
+
+.nav a:hover {
+    color: #F0F0F0;
+    text-decoration: none;
+}
+
+/* ===== CONTENIDO PRINCIPAL ===== */
+.main-content {
+    flex: 1 0 auto;
+    background-color: #F0F0F0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Estilos del hero section */
+.hero {
+    padding: 3rem 0;
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+}
+
+.hero h1 {
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-size: 3rem;
+    letter-spacing: 0.5px;
+}
+
+.hero .lead {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #6c757d;
+    font-weight: 400;
+}
+
+.main-image {
+    max-height: 400px;
+    width: 100%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* ===== ESTILOS DEL PIE DE PÁGINA ===== */
+.footer {
+    background-color: #343a40;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #7CF023;
+    text-decoration: none;
+}
+
+/* Alineación de las imágenes de banderas */
+.lang-switch img {
+    vertical-align: middle;
+}
+
+/* ===== ESTILOS RESPONSIVOS ===== */
+@media (max-width: 768px) {
+    .header .container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .nav, .lang-switch {
+        margin-top: 10px;
+    }
+    
+    .nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .nav a {
+        margin: 0 5px;
+    }
+    
+    .hero {
+        text-align: center;
+        padding: 2rem 0;
+        min-height: auto;
+    }
+    
+    .hero img {
+        margin-top: 2rem;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .main-image {
+        max-height: 350px;
+    }
+    
+    .header-logo {
+        height: 40px !important;
+    }
+    
+    .header-icon {
+        height: 20px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .header {
+        padding: 1rem 0;
+    }
+    
+    .header-logo {
+        height: 35px !important;
+    }
+    
+    .header-icon {
+        height: 18px !important;
+    }
+    
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .hero .lead {
+        font-size: 1rem;
+    }
+    
+    .footer {
+        font-size: 0.8rem;
+        padding: 1rem 0;
+    }
+    
+    .footer a {
+        font-size: 0.8rem;
+    }
+    
+    .main-image {
+        max-height: 280px;
+    }
+    
+    .nav {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .nav a {
+        margin: 2px 0;
+    }
+}
+
