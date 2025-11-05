@@ -31,17 +31,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
-    // =======================
-    // Relaciones del usuario
-    // =======================
-
-    // Un usuario (cliente) tiene muchas mascotas
+    // Un usuario tiene muchas mascotas
     public function mascotas()
     {
         return $this->hasMany(Mascota::class, 'usuario_id');
     }
 
-    // Un usuario (cliente) puede tener muchas citas veterinarias
+    // Un usuario puede tener muchas citas veterinarias
     public function citas()
     {
         return $this->hasMany(Cita::class, 'usuario_id');
@@ -59,7 +55,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Tratamiento::class, 'veterinario_id');
     }
 
-    // Un usuario (cliente) puede tener varios pagos registrados
+    // Un usuario puede tener varios pagos registrados
     public function pagos()
     {
         return $this->hasMany(Pago::class, 'usuario_id');
