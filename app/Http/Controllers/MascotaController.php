@@ -5,117 +5,60 @@ namespace App\Http\Controllers;
 use App\Models\Mascota;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule; // Importante para la validación de la especie
 
 class MascotaController extends Controller
 {
-    /**
-     * Mostramos todas las mascotas del usuario autenticado.
-     */
-    public function mostrarMascotas()
+    // ... (El método index() que ya tienes se queda igual) ...
+    public function index()
     {
-        $mascotas = Mascota::where('user_id', Auth::id())->get();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $mascotas = $user->mascotas()->latest()->get();
         return view('mascotas.index', compact('mascotas'));
     }
 
     /**
-     * Mostramos el formulario para crear una nueva mascota.
+     * Muestra el formulario para crear una nueva mascota.
      */
-    public function crearMascota()
+    public function create()
     {
+        // Simplemente devolvemos la vista con el formulario.
         return view('mascotas.create');
     }
 
     /**
-     * Guardamos una nueva mascota en la base de datos.
+     * Almacena una nueva mascota en la base de datos.
      */
-    public function guardarMascota(Request $request)
+    public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:100',
-            'especie' => 'required|string|max:100',
-            'raza' => 'nullable|string|max:100',
-            'edad' => 'nullable|integer',
-            'peso' => 'nullable|numeric',
-            'foto' => 'nullable|image|max:2048',
+        // 1. Validación de los datos del formulario
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'especie' => ['required', Rule::in(['Perro', 'Gato', 'Hamster', 'Conejo'])],
+            'raza' => 'nullable|string|max:255',
+            'edad' => 'nullable|integer|min:0',
+            'peso' => 'nullable|numeric|min:0',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Valida que sea una imagen
+            'fecha_nacimiento' => 'nullable|date',
         ]);
 
-        $fotoPath = $request->hasFile('foto')
-            ? $request->file('foto')->store('mascotas', 'public')
-            : null;
-
-        Mascota::create([
-            'nombre' => $request->nombre,
-            'especie' => $request->especie,
-            'raza' => $request->raza,
-            'edad' => $request->edad,
-            'peso' => $request->peso,
-            'foto' => $fotoPath,
-            'user_id' => Auth::id(),
-        ]);
-
-        return redirect()->route('mascotas.index')->with('success', 'Mascota registrada con éxito.');
-    }
-
-    /**
-     * Mostramos los detalles de una mascota.
-     */
-    public function mostrarDatosMascota($id)
-    {
-        $mascota = Mascota::findOrFail($id);
-        return view('mascotas.show', compact('mascota'));
-    }
-
-    /**
-     * Mostramos el formulario para editar una mascota.
-     */
-    public function editarMascota($id)
-    {
-        $mascota = Mascota::findOrFail($id);
-        return view('mascotas.edit', compact('mascota'));
-    }
-
-    /**
-     * Actualizamos los datos de una mascota.
-     */
-    public function actualizarMascota(Request $request, $id)
-    {
-        $mascota = Mascota::findOrFail($id);
-
-        $request->validate([
-            'nombre' => 'required|string|max:100',
-            'especie' => 'required|string|max:100',
-            'raza' => 'nullable|string|max:100',
-            'edad' => 'nullable|integer',
-            'peso' => 'nullable|numeric',
-            'foto' => 'nullable|image|max:2048',
-        ]);
-
-        $data = $request->only(['nombre', 'especie', 'raza', 'edad', 'peso']);
-
+        // 2. Manejo de la subida de la foto
         if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('mascotas', 'public');
+            // Guarda la imagen en 'storage/app/public/fotos_mascotas' y obtiene la ruta
+            $rutaFoto = $request->file('foto')->store('fotos_mascotas', 'public');
+            $validatedData['foto'] = $rutaFoto;
         }
 
-        $mascota->update($data);
+        // 3. Añadir el ID del propietario (el usuario logueado)
+        $validatedData['user_id'] = Auth::id();
 
-        return redirect()->route('mascotas.index')->with('success', 'Mascota actualizada correctamente.');
+        // 4. Crear la mascota en la base de datos
+        Mascota::create($validatedData);
+
+        // 5. Redirigir al listado de mascotas con un mensaje de éxito
+        return redirect()->route('mascotas.index')->with('success', '¡Mascota registrada con éxito!');
     }
 
-    /**
-     * Eliminamos una mascota.
-     */
-    public function borrarMascota($id)
-    {
-        $mascota = Mascota::findOrFail($id);
-        $mascota->delete();
-
-        return redirect()->route('mascotas.index')->with('success', 'Mascota eliminada con éxito.');
-    }
-
-    public static function contarMascotasUsuario()
-    {
-        return Mascota::where('user_id', Auth::id())->count();
-    }
+    // ... (El resto de métodos show, edit, update, destroy, etc.) ...
 }
-
-

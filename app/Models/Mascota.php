@@ -19,6 +19,7 @@ class Mascota extends Model
         'peso',
         'foto',
         'fecha_nacimiento',
+        'user_id',
     ];
 
     public function usuario()

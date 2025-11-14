@@ -1,0 +1,132 @@
+/* ===================================================================
+   PANEL.CSS - Hoja de Estilos Maestra para el Panel de Control
+   =================================================================== */
+
+/* --- ESTRUCTURA GENERAL DEL PANEL --- */
+.panel-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa; /* Un fondo gris claro para el área de contenido */
+}
+
+.panel-main {
+    flex: 1;
+    margin-left: 280px; /* Ancho del sidebar */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- SIDEBAR (Menú Lateral) --- */
+/* (Estos estilos son prácticamente los mismos que tenías) */
+.panel-sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #0077B6 0%, #005a8c 100%);
+    color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+.sidebar-header { padding: 25px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
+.sidebar-logo { max-width: 180px; height: auto; }
+.sidebar-menu ul { list-style: none; padding: 0; margin: 0; }
+.sidebar-menu li { margin: 5px 0; }
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    font-weight: 500;
+}
+.sidebar-menu a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left-color: #7CF023;
+    padding-left: 30px;
+}
+.sidebar-menu a i { margin-right: 12px; font-size: 1.2rem; width: 20px; text-align: center; }
+
+/* --- HEADER SUPERIOR --- */
+.panel-header {
+    background-color: white;
+    padding: 20px 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+.header-title h3 { margin: 0; font-size: 1.5rem; color: #333; }
+.header-title p { margin: 0; color: #666; font-size: 0.9rem; }
+.header-actions { display: flex; gap: 1rem; align-items: center; }
+
+/* --- ÁREA DE CONTENIDO PRINCIPAL --- */
+.panel-content {
+    padding: 30px;
+    flex-grow: 1;
+}
+
+/* ===================================================
+   COMPONENTES REUTILIZABLES
+   =================================================== */
+
+/* --- Títulos de Sección --- */
+.section-title {
+    font-size: 1.5rem; font-weight: 600; color: #333; margin-bottom: 20px;
+    padding-bottom: 10px; border-bottom: 2px solid #0077B6;
+}
+
+/* --- Botones Genéricos --- */
+.btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1.2rem; border: none; border-radius: 6px;
+    text-decoration: none; color: white; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease;
+}
+.btn-primary { background-color: #0077B6; } /* Azul principal */
+.btn-primary:hover { background-color: #005a8c; }
+.btn-secondary { background-color: #3b82f6; } /* Azul más claro para 'Ver' */
+.btn-secondary:hover { background-color: #2563eb; }
+.btn-warning { background-color: #f59e0b; } /* Amarillo/Naranja para 'Editar' */
+.btn-warning:hover { background-color: #d97706; }
+.btn-danger { background-color: #ef4444; } /* Rojo para 'Eliminar' */
+.btn-danger:hover { background-color: #dc2626; }
+
+/* --- Tarjeta para cuando no hay datos --- */
+.empty-state-card {
+    text-align: center; padding: 40px 20px; background: #fff;
+    border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    color: #666; border: 1px dashed #ddd;
+}
+.empty-state-card p { font-size: 1.1rem; margin-top: 10px; }
+.empty-state-card i { font-size: 3rem; color: #ccc; }
+
+/* --- Estilos para listas de items (Mascotas, Citas, etc.) --- */
+.item-list { display: flex; flex-direction: column; gap: 1rem; }
+.item-card {
+    display: flex; align-items: center; background: #fff;
+    padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 1.5rem; transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.item-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.item-photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; }
+.item-details { flex-grow: 1; }
+.item-details h4 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.item-details p { margin: 5px 0 0; color: #666; }
+.item-actions { display: flex; gap: 0.5rem; }
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .panel-sidebar { display: none; /* Oculta el sidebar en tablet/móvil por simplicidad */ }
+    .panel-main { margin-left: 0; }
+}
+@media (max-width: 768px) {
+    .panel-header { flex-direction: column; gap: 15px; text-align: center; }
+    .panel-content { padding: 20px 15px; }
+    .item-card { flex-direction: column; text-align: center; }
+    .item-actions { justify-content: center; }
+}

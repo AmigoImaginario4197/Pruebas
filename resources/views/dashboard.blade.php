@@ -24,7 +24,7 @@
                 <ul>
                     {{-- 1. ENLACES COMUNES PARA TODOS LOS ROLES --}}
                     <li>
-                        <a href="{{-- route('profile.edit') --}}">
+                        <a href="{{route('profile.edit')}}">
                             <i class="bi bi-person"></i>
                             {{ Auth::user()->name }}
                         </a>
@@ -34,13 +34,13 @@
                     <li>
                         @if(Auth::user()->isVeterinario())
                             {{-- Si es veterinario, apunta a una ruta diferente --}}
-                            <a href="{{-- route('veterinario.mascotas.index') --}}"> 
+                            <a href="{{route('veterinario.mascotas.index')}}"> 
                                 <i class="bi bi-heart-pulse"></i> {{-- Icono diferente para distinguir --}}
                                 Gestionar Mascotas
                             </a>
                         @else
                             {{-- Para clientes y administradores, apunta a la ruta normal --}}
-                            <a href="{{-- route('mascotas.index') --}}">
+                            <a href="{{route('mascotas.index')}}">
                                 <i class="bi bi-heart"></i>
                                 Mis Mascotas
                             </a>
@@ -49,7 +49,7 @@
 
                     {{-- 3. MÁS ENLACES COMUNES --}}
                     <li>
-                        <a href="{{-- route('citas.index') --}}">
+                        <a href="{{route('citas.index')}}">
                             <i class="bi bi-calendar-check"></i>
                             Citas
                         </a>
@@ -67,7 +67,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{-- route('tratamientos.index') --}}">
+                        <a href="{{ route('tratamientos.index')}}">
                             <i class="bi bi-prescription2"></i>
                             Tratamiento
                         </a>
