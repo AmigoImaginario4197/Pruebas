@@ -53,9 +53,9 @@
     <!-- Pie de página -->
     <footer class="footer bg-dark text-white text-center py-3">
         <div class="footer-links">
-            <a href="{{ route('aviso-legal') }}" class="text-white mx-2 footer-link">Aviso legal</a> |
-            <a href="{{ route('politica-privacidad') }}" class="text-white mx-2 footer-link">Política de privacidad</a> |
-            <a href="{{ route('politica-cookies') }}" class="text-white mx-2 footer-link">Política de cookies</a>
+        <a href="{{ route('legal.aviso') }}">Aviso Legal</a>
+        <a href="{{ route('legal.privacidad') }}">Política de Privacidad</a>
+        <a href="{{ route('legal.politica-cookies') }}">Política de Cookies</a>
         </div>
     </footer>
 
