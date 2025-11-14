@@ -7,12 +7,9 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        /* Agregamos el nuevo CSS del dashboard */
-        {{ file_get_contents(public_path('css/dashboard.css')) }}
-    </style>
-    
-    <!-- Scripts -->
+    @if(file_exists(public_path('css/dashboard.css')))
+        <style>{{ file_get_contents(public_path('css/dashboard.css')) }}</style>
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
@@ -23,22 +20,36 @@
                 <img src="{{ asset('images/logo.png') }}" alt="Pet Care Logo" class="sidebar-logo">
             </div>
             
-            <nav class="sidebar-menu">
+             <nav class="sidebar-menu">
                 <ul>
+                    {{-- 1. ENLACES COMUNES PARA TODOS LOS ROLES --}}
                     <li>
-                        <a href="#">
+                        <a href="{{-- route('profile.edit') --}}">
                             <i class="bi bi-person"></i>
-                            Sergio Rojas
+                            {{ Auth::user()->name }}
                         </a>
                     </li>
+
+                    {{-- 2. ENLACE CONDICIONAL PARA "MASCOTAS" --}}
                     <li>
-                        <a href="#">
-                            <i class="bi bi-heart"></i>
-                            Mascotas
-                        </a>
+                        @if(Auth::user()->isVeterinario())
+                            {{-- Si es veterinario, apunta a una ruta diferente --}}
+                            <a href="{{-- route('veterinario.mascotas.index') --}}"> 
+                                <i class="bi bi-heart-pulse"></i> {{-- Icono diferente para distinguir --}}
+                                Gestionar Mascotas
+                            </a>
+                        @else
+                            {{-- Para clientes y administradores, apunta a la ruta normal --}}
+                            <a href="{{-- route('mascotas.index') --}}">
+                                <i class="bi bi-heart"></i>
+                                Mis Mascotas
+                            </a>
+                        @endif
                     </li>
+
+                    {{-- 3. MÁS ENLACES COMUNES --}}
                     <li>
-                        <a href="#">
+                        <a href="{{-- route('citas.index') --}}">
                             <i class="bi bi-calendar-check"></i>
                             Citas
                         </a>
@@ -56,23 +67,29 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="{{-- route('tratamientos.index') --}}">
                             <i class="bi bi-prescription2"></i>
                             Tratamiento
                         </a>
                     </li>
-                    <li>
-                        <a href="#">
-                            <i class="bi bi-gear"></i>
-                            Configuración
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="bi bi-list-check"></i>
-                            Logs
-                        </a>
-                    </li>
+
+                    {{-- 4. ENLACES SOLO PARA ADMINISTRADORES --}}
+                    @if(Auth::user()->isAdmin())
+                        <li>
+                            <a href="#">
+                                <i class="bi bi-gear"></i>
+                                Configuración
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="bi bi-list-check"></i>
+                                Logs
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- 5. ENLACE UNIVERSAL DE "SALIR" --}}
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -85,6 +102,7 @@
                     </li>
                 </ul>
             </nav>
+           
         </div>
 
         <!-- Main Content -->
@@ -101,7 +119,7 @@
                 </div>
                 
                 <div class="header-actions">
-                    <span class="text-gray-600">{{ now()->format('d M Y') }}</span>
+                    <span class="text-gray-600">{{ now()->translatedFormat('d M Y') }}</span>
                 </div>
             </header>
 
@@ -109,26 +127,26 @@
                 <!-- Welcome Card -->
                 <div class="welcome-card">
                     <h1>Dashboard</h1>
-                    <p>You're logged in!</p>
+                    <p>¡Has iniciado sesión!</p>
                 </div>
 
                 <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">12</div>
+                        <div class="stat-number">{{ $conteoMascotas }}</div>
                         <div class="stat-label">Mascotas Activas</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">5</div>
+                        <div class="stat-number">{{ $conteoCitasHoy }}</div>
                         <div class="stat-label">Citas Hoy</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">3</div>
-                        <div class="stat-label">Tratamientos</div>
+                        <div class="stat-number">{{ $conteoTratamientos }}</div>
+                        <div class="stat-label">Tratamientos Activos</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">28</div>
-                        <div class="stat-label">Total Citas</div>
+                        <div class="stat-number">{{ $conteoCitasCompletadas }}</div>
+                        <div class="stat-label">Total Citas Completadas</div>
                     </div>
                 </div>
 
@@ -137,29 +155,28 @@
                     <h2 class="section-title">Próximas Citas</h2>
                     
                     <div class="appointment-cards">
-                        <!-- Appointment Card 1 -->
-                        <div class="appointment-card">
-                            <div class="appointment-title">Cita 1</div>
-                            <div class="appointment-time">14:00-15:00</div>
-                            <div class="appointment-actions">
-                                <button class="btn-accept">Aceptar</button>
-                                <button class="btn-deny">Denegar</button>
+                        @forelse ($proximasCitas as $cita)
+                            <div class="appointment-card">
+                                <div class="appointment-title">
+                                    {{ $cita->servicio->nombre }} para <strong>{{ $cita->mascota->nombre }}</strong>
+                                </div>
+                                <div class="appointment-time">
+                                    <span><i class="bi bi-calendar-event"></i> {{ $cita->fecha_hora->format('d/m/Y') }}</span>
+                                    <span><i class="bi bi-clock"></i> {{ $cita->fecha_hora->format('H:i') }}h</span>
+                                </div>
+                                <div class="appointment-actions">
+                                    <a href="{{-- route('citas.show', $cita->id) --}}" class="btn-accept">Detalles</a>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Puedes agregar más citas aquí -->
-                        <div class="appointment-card">
-                            <div class="appointment-title">Cita 2</div>
-                            <div class="appointment-time">16:00-17:00</div>
-                            <div class="appointment-actions">
-                                <button class="btn-accept">Aceptar</button>
-                                <button class="btn-deny">Denegar</button>
+                        @empty
+                            <div class="no-appointments-card" style="text-align: center; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <p>No tienes citas pendientes.</p>
                             </div>
-                        </div>
+                        @endforelse
                     </div>
                 </div>
             </main>
         </div>
     </div>
 </body>
-</html> 
+</html>

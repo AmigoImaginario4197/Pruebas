@@ -12,12 +12,9 @@ class Pago extends Model
     protected $table = 'pago';
 
     protected $fillable = [
-        'usuario_id',
-        'cita_id',
         'monto',
         'metodo',
         'estado',
-        'fecha_pago',
     ];
 
     public function usuario()

@@ -44,28 +44,27 @@ class UserController extends Controller
      * Actualizamos los datos del usuario autenticado.
      */
     public function actualizarUsuario(Request $request)
-    {
-        $usuario = Auth::user();
+{
+    $usuario = Auth::user();
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => "required|email|unique:users,email,{$usuario->id}",
-            'direccion' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'password' => 'nullable|min:6|confirmed',
-        ]);
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => "required|email|unique:users,email,{$usuario->id}",
+        'direccion' => 'nullable|string|max:255',
+        'telefono' => 'nullable|string|max:20',
+        'password' => 'nullable|min:6|confirmed',
+    ]);
 
-        $data = $request->only(['name', 'email', 'direccion', 'telefono']);
+    $data = $request->only(['name', 'email', 'direccion', 'telefono']);
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        $usuario->update($data);
-
-        return redirect()->route('perfil.show')->with('success', 'Perfil actualizado correctamente.');
+    if ($request->filled('password')) {
+        $data['password'] = Hash::make($request->password);
     }
 
+    User::where('id', $usuario->id)->update($data);
+
+    return redirect()->route('perfil.show')->with('success', 'Perfil actualizado correctamente.');
+}
     /**
      * Eliminamos una cuenta (solo si el usuario es administrador o el propietario).
      */

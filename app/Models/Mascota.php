@@ -19,12 +19,11 @@ class Mascota extends Model
         'peso',
         'foto',
         'fecha_nacimiento',
-        'usuario_id',
     ];
 
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function citas()

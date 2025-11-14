@@ -13,8 +13,8 @@ class Medicamento extends Model
 
     protected $fillable = [
         'nombre',
+        'dosis_recomendada',
         'descripcion',
-        'dosis',
     ];
 
     public function tratamientos()

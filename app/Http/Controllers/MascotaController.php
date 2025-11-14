@@ -13,7 +13,7 @@ class MascotaController extends Controller
      */
     public function mostrarMascotas()
     {
-        $mascotas = Mascota::where('usuario_id', Auth::id())->get();
+        $mascotas = Mascota::where('user_id', Auth::id())->get();
         return view('mascotas.index', compact('mascotas'));
     }
 
@@ -50,7 +50,7 @@ class MascotaController extends Controller
             'edad' => $request->edad,
             'peso' => $request->peso,
             'foto' => $fotoPath,
-            'usuario_id' => Auth::id(),
+            'user_id' => Auth::id(),
         ]);
 
         return redirect()->route('mascotas.index')->with('success', 'Mascota registrada con éxito.');
@@ -111,4 +111,11 @@ class MascotaController extends Controller
 
         return redirect()->route('mascotas.index')->with('success', 'Mascota eliminada con éxito.');
     }
+
+    public static function contarMascotasUsuario()
+    {
+        return Mascota::where('user_id', Auth::id())->count();
+    }
 }
+
+

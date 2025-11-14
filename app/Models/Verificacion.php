@@ -12,10 +12,9 @@ class Verificacion extends Model
     protected $table = 'verificacion';
 
     protected $fillable = [
-        'usuario_id',
-        'codigo',
-        'fecha_envio',
-        'verificado',
+        'codigo_verificacion',
+        'expira_en',
+        'usado',
     ];
 
     public function usuario()

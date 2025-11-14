@@ -12,8 +12,6 @@ class TratamientoMedicamento extends Model
     protected $table = 'tratamiento_medicamento';
 
     protected $fillable = [
-        'tratamiento_id',
-        'medicamento_id',
         'frecuencia',
         'duracion',
     ];

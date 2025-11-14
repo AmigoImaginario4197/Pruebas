@@ -90,26 +90,26 @@ class User extends Authenticatable implements MustVerifyEmail
     
     public function mascotas()
     {
-        return $this->hasMany(Mascota::class, 'usuario_id');
+        return $this->hasMany(Mascota::class, 'user_id');
     }
 
     public function citas()
     {
-        return $this->hasMany(Cita::class, 'usuario_id');
-    }
+         return $this->hasManyThrough(Cita::class, Mascota::class, 'user_id', 'mascota_id');
+}
 
     public function disponibilidades()
     {
-        return $this->hasMany(Disponibilidad::class, 'usuario_id');
+        return $this->hasMany(Disponibilidad::class, 'user_id');
     }
 
     public function tratamientos()
     {
-        return $this->hasMany(Tratamiento::class, 'veterinario_id');
+        return $this->hasMany(Tratamiento::class, 'user_id');
     }
 
     public function pagos()
     {
-        return $this->hasMany(Pago::class, 'usuario_id');
+        return $this->hasMany(Pago::class, 'user_id');
     }
 }

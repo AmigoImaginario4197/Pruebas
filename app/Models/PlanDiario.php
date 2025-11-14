@@ -12,7 +12,7 @@ class PlanDiario extends Model
     protected $table = 'plan_diario';
 
     protected $fillable = [
-        'mascota_id',
+        'fecha',
         'actividad',
         'hora',
         'descripcion',

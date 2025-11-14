@@ -13,14 +13,17 @@ class Archivo extends Model
 
     protected $fillable = [
         'nombre',
-        'ruta',
-        'tipo',
-        'mascota_id',
-        'descripcion',
+        'ruta_archivo',
+        'fecha_subida',
     ];
 
     public function mascota()
     {
         return $this->belongsTo(Mascota::class, 'mascota_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
