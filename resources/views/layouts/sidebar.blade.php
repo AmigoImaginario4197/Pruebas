@@ -4,7 +4,14 @@
     </div>
     
     <nav class="sidebar-menu">
+    {{-- Enlace al Perfil del Usuario --}}
         <ul>
+            <li>
+                <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+                    <i class="bi bi-person"></i>
+                    {{ Auth::user()->name }}
+                </a>
+            </li>
             {{-- Enlace al Dashboard --}}
             <li>
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -39,7 +46,7 @@
             <li>
                 <a href="{{-- route('historial.index') --}}"> {{-- Comentado hasta que crees la ruta --}}
                     <i class="bi bi-clock-history"></i>
-                    Historial
+                    Historial Medico
                 </a>
             </li>
             <li>
