@@ -61,4 +61,6 @@ Route::middleware(['auth', 'role:veterinario'])->group(function () {
     Route::get('/veterinario/mascotas', [MascotaController::class, 'indexVeterinario'])->name('veterinario.mascotas.index');
 });
 
+Route::resource('mascotas', MascotaController::class);
+
 require __DIR__.'/auth.php';
