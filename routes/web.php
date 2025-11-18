@@ -8,17 +8,10 @@ use App\Http\Controllers\HistorialMedicoController;
 use App\Http\Controllers\MascotaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TratamientoController;
-use App\Http\Controllers\UserController; // Lo añadimos para la gestión de usuarios
+use App\Http\Controllers\UserController; 
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Rutas Web
-|--------------------------------------------------------------------------
-| Aquí es donde puedes registrar las rutas web para tu aplicación.
-*/
-
-// ========== 1. RUTAS PÚBLICAS ==========
+// ========== RUTAS PÚBLICAS ==========
 // Accesibles para cualquier visitante, no requieren inicio de sesión.
 Route::get('/', function () { return view('home'); })->name('home');
 Route::get('/presentacion', function () { return view('presentacion'); })->name('presentacion');
@@ -33,40 +26,34 @@ Route::prefix('legal')->name('legal.')->group(function () {
 });
 
 
-// ========== 2. RUTAS DE AUTENTICACIÓN ==========
+// ========== RUTAS DE AUTENTICACIÓN ==========
 // Manejan el login, registro, logout, recuperación de contraseña, etc.
 require __DIR__.'/auth.php';
 
 
-// ========== 3. RUTAS PRIVADAS (PANEL DE CONTROL) ==========
+// ========== RUTAS PRIVADAS (PANEL DE CONTROL) ==========
 // Requieren que el usuario haya iniciado sesión y verificado su email.
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // --- Panel Principal (Dashboard) ---
+    // --- Panel Principal ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // --- Gestión del Perfil del Propio Usuario ---
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::prefix('legal')->name('legal.')->group(function () {
-    Route::get('/aviso', function () { return view('aviso-legal'); })->name('aviso');
-    Route::get('/aviso-legal', function () {
-    return view('aviso-legal');
-})->name('aviso-legal');
-
-Route::get('/politica-privacidad', function () {
-    return view('politica-privacidad');
-})->name('politica-privacidad');
-
-Route::get('/politica-cookies', function () {
-    return view('politica-cookies');
-})->name('politica-cookies');
-});
+    
     // --- Gestión de Mascotas ---
-    // Rutas para clientes y administradores (ver/crear sus propias mascotas)
+    // Define todas las rutas RESTful para mascotas (create, store, edit, update, destroy, index).
     Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
     
+    // <<< RUTA AÑADIDA >>>
+    // Esta es la ruta específica para la petición AJAX que carga los datos en la modal.
+    // Es fundamental para que el JavaScript pueda obtener la información de la mascota.
+    Route::get('/mascotas/dinamico/{id}', [MascotaController::class, 'showDinamico'])
+         ->name('mascotas.show')
+         ->middleware('role:cliente,admin');
+
     // Ruta especial para que los veterinarios vean el listado general de mascotas
     Route::get('/veterinario/mascotas', [MascotaController::class, 'indexVeterinario'])
         ->name('veterinario.mascotas.index')
@@ -83,7 +70,6 @@ Route::get('/politica-cookies', function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         // Ejemplo: Gestionar todos los usuarios del sistema
         Route::resource('usuarios', UserController::class);
-         });
-
+    });
          
 });

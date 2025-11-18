@@ -22,7 +22,7 @@
             
              <nav class="sidebar-menu">
                 <ul>
-                    {{-- 1. ENLACES COMUNES PARA TODOS LOS ROLES --}}
+                    {{-- ENLACES COMUNES PARA TODOS LOS ROLES --}}
                     <li>
                         <a href="{{route('profile.edit')}}">
                             <i class="bi bi-person"></i>
@@ -30,7 +30,7 @@
                         </a>
                     </li>
 
-                    {{-- 2. ENLACE CONDICIONAL PARA "MASCOTAS" --}}
+                    {{-- ENLACE CONDICIONAL PARA "MASCOTAS" --}}
                     <li>
                         @if(Auth::user()->isVeterinario())
                             {{-- Si es veterinario, apunta a una ruta diferente --}}
@@ -47,7 +47,7 @@
                         @endif
                     </li>
 
-                    {{-- 3. MÁS ENLACES COMUNES --}}
+                    {{-- MÁS ENLACES COMUNES --}}
                     <li>
                         <a href="{{route('citas.index')}}">
                             <i class="bi bi-calendar-check"></i>
@@ -73,7 +73,7 @@
                         </a>
                     </li>
 
-                    {{-- 4. ENLACES SOLO PARA ADMINISTRADORES --}}
+                    {{-- ENLACES SOLO PARA ADMINISTRADORES --}}
                     @if(Auth::user()->isAdmin())
                         <li>
                             <a href="#">
@@ -89,7 +89,7 @@
                         </li>
                     @endif
 
-                    {{-- 5. ENLACE UNIVERSAL DE "SALIR" --}}
+                    {{-- ENLACE UNIVERSAL DE "SALIR" --}}
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

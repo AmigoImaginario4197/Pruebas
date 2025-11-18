@@ -9,7 +9,6 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
-    <!-- Cargamos nuestro CSS maestro -->
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,12 +16,9 @@
 <body class="font-sans antialiased">
     <div class="panel-container">
         
-        {{-- ¡MAGIA! Incluimos el menú reutilizable con una sola línea --}}
         @include('layouts.sidebar')
 
-        <!-- Main Content -->
         <main class="panel-main">
-            {{-- Header de la página --}}
             <header class="panel-header">
                 <div class="header-title">
                     <h3>Mis Mascotas</h3>
@@ -35,29 +31,35 @@
                 </div>
             </header>
 
-            {{-- Contenido principal de la página --}}
             <div class="panel-content">
+                {{-- Mostramos mensaje de éxito si existe --}}
+                @if (session('success'))
+                    <div class="alert alert-success mb-4">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                
                 <div class="item-list">
                     @forelse ($mascotas as $mascota)
                         <div class="item-card">
-                            <!-- Foto -->
                             <img src="{{ $mascota->foto ? asset('storage/' . $mascota->foto) : asset('images/placeholder-pet.png') }}" alt="Foto de {{ $mascota->nombre }}" class="item-photo">
                             
-                            <!-- Detalles -->
                             <div class="item-details">
                                 <h4>{{ $mascota->nombre }}</h4>
                                 <p>{{ $mascota->especie }} - {{ $mascota->raza ?? 'Raza no especificada' }}</p>
                             </div>
 
-                            <!-- Acciones -->
                             <div class="item-actions">
-                                <a href="{{-- route('mascotas.show', $mascota) --}}" class="btn btn-secondary">
-                                    <i class="bi bi-eye"></i> Ver
+                                {{-- BOTÓN "VER" MODIFICADO PARA ABRIR LA MODAL --}}
+                                <a href="{{ route('mascotas.show', $mascota) }}" class="btn btn-secondary">
+                                <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <a href="{{-- route('mascotas.edit', $mascota) --}}" class="btn btn-warning">
+                                
+                                {{-- MODIFICADO: Rutas descomentadas --}}
+                                <a href="{{ route('mascotas.edit', $mascota) }}" class="btn btn-warning">
                                     <i class="bi bi-pencil"></i> Editar
                                 </a>
-                                <form action="{{-- route('mascotas.destroy', $mascota) --}}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar a {{ $mascota->nombre }}?');">
+                                <form action="{{ route('mascotas.destroy', $mascota) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar a {{ $mascota->nombre }}?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">
@@ -76,6 +78,32 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    {{-- AÑADIDO: Estructura HTML de la Ventana Modal --}}
+    <div class="modal fade" id="mascotaModal" tabindex="-1" aria-labelledby="mascotaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mascotaModalLabel">Detalles de la Mascota</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <img id="modalFoto" src="" class="img-fluid rounded-circle" style="max-height: 150px; max-width: 150px; object-fit: cover; border: 3px solid #eee;" alt="Foto de la mascota">
+                    </div>
+                    <p><strong>Nombre:</strong> <span id="modalNombre"></span></p>
+                    <p><strong>Especie:</strong> <span id="modalEspecie"></span></p>
+                    <p><strong>Raza:</strong> <span id="modalRaza"></span></p>
+                    <p><strong>Edad:</strong> <span id="modalEdad"></span></p>
+                    <p><strong>Peso:</strong> <span id="modalPeso"></span></p>
+                    <p><strong>Fecha de Nacimiento:</strong> <span id="modalFechaNacimiento"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
