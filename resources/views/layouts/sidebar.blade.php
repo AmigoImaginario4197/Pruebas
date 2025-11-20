@@ -4,14 +4,15 @@
     </div>
     
     <nav class="sidebar-menu">
-    {{-- Enlace al Perfil del Usuario --}}
         <ul>
+            {{-- Enlace al Perfil del Usuario --}}
             <li>
                 <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
                     <i class="bi bi-person"></i>
                     {{ Auth::user()->name }}
                 </a>
             </li>
+            
             {{-- Enlace al Dashboard --}}
             <li>
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -20,14 +21,36 @@
                 </a>
             </li>
 
-            {{-- Enlace a Mascotas (condicional por rol) --}}
+            {{-- ========================================================== --}}
+            {{-- CAMBIO 1: AÑADIDO - Enlace a Usuarios solo para Admin --}}
+            {{-- ========================================================== --}}
+            @if(Auth::user()->isAdmin())
+                <li>
+                    <a href="{{ route('admin.usuarios.index') }}" class="{{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i>
+                        Usuarios
+                    </a>
+                </li>
+            @endif
+
+            {{-- =============================================================== --}}
+            {{-- CAMBIO 2: MODIFICADO - Lógica visual para el enlace a Mascotas --}}
+            {{-- =============================================================== --}}
             <li>
                 @if(Auth::user()->isVeterinario())
+                    {{-- Los veterinarios ven "Mascotas" y van a su ruta específica --}}
                     <a href="{{ route('veterinario.mascotas.index') }}" class="{{ request()->routeIs('veterinario.mascotas.index') ? 'active' : '' }}"> 
                         <i class="bi bi-heart-pulse"></i>
-                        Gestionar Mascotas
+                        Mascotas
+                    </a>
+                @elseif(Auth::user()->isAdmin())
+                    {{-- Los administradores ven "Mascotas" y van a la ruta general --}}
+                     <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
+                        <i class="bi bi-heart"></i>
+                        Mascotas
                     </a>
                 @else
+                    {{-- Por defecto, los clientes ven "Mis Mascotas" --}}
                     <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
                         <i class="bi bi-heart"></i>
                         Mis Mascotas
@@ -44,13 +67,14 @@
             </li>
 
             <li>
-                <a href="{{-- route('historial.index') --}}"> {{-- Comentado hasta que crees la ruta --}}
+                <a href="{{ route('historial.index') }}"> {{-- Ruta ya existente y descomentada --}}
                     <i class="bi bi-clock-history"></i>
-                    Historial Medico
+                    Historial Médico
                 </a>
             </li>
+
             <li>
-                <a href="#"> {{-- Apunta a '#' porque no tiene una ruta definida aún --}}
+                <a href="#">
                     <i class="bi bi-archive"></i>
                     Archivo
                 </a>
@@ -83,7 +107,7 @@
     </nav>
 </div>
 
-{{-- Estilo para el enlace activo --}}
+{{-- Estilo para el enlace activo (sin cambios, se mantiene igual) --}}
 <style>
     .sidebar-menu a.active {
         background-color: rgba(255, 255, 255, 0.1);

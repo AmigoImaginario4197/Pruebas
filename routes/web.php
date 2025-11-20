@@ -44,15 +44,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // --- Gestión de Mascotas ---
-    // Define todas las rutas RESTful para mascotas (create, store, edit, update, destroy, index).
+    // Esta única línea ahora maneja correctamente todas las rutas necesarias,
+    // incluyendo las de 'show' y 'edit' que solicitaste.
     Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
-    
-    // <<< RUTA AÑADIDA >>>
-    // Esta es la ruta específica para la petición AJAX que carga los datos en la modal.
-    // Es fundamental para que el JavaScript pueda obtener la información de la mascota.
-    Route::get('/mascotas/dinamico/{id}', [MascotaController::class, 'showDinamico'])
-         ->name('mascotas.show')
-         ->middleware('role:cliente,admin');
 
     // Ruta especial para que los veterinarios vean el listado general de mascotas
     Route::get('/veterinario/mascotas', [MascotaController::class, 'indexVeterinario'])
@@ -60,8 +54,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:veterinario');
 
     // --- Funcionalidades Principales ---
-    // Estas rutas están disponibles para todos los roles logueados.
-    // El controlador se encargará de mostrar los datos correctos para cada rol.
     Route::resource('citas', CitaController::class);
     Route::resource('tratamientos', TratamientoController::class);
     Route::resource('historial', HistorialMedicoController::class);
