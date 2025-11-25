@@ -107,7 +107,7 @@
     </nav>
 </div>
 
-{{-- Estilo para el enlace activo (sin cambios, se mantiene igual) --}}
+{{-- Estilo para el enlace activo --}}
 <style>
     .sidebar-menu a.active {
         background-color: rgba(255, 255, 255, 0.1);

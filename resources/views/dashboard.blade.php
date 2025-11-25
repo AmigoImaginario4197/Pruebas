@@ -4,109 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Care - Dashboard</title>
+    
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    @if(file_exists(public_path('css/dashboard.css')))
-        <style>{{ file_get_contents(public_path('css/dashboard.css')) }}</style>
-    @endif
+    
+    {{-- CSS para la estructura general del panel (Sidebar, etc.) --}}
+    <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
+    
+    {{-- AÑADIDO: Estilos específicos para el contenido del Dashboard (tarjetas, etc.) --}}
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="dashboard-sidebar">
-            <div class="sidebar-header">
-                <img src="{{ asset('images/logo.png') }}" alt="Pet Care Logo" class="sidebar-logo">
-            </div>
-            
-             <nav class="sidebar-menu">
-                <ul>
-                    {{-- ENLACES COMUNES PARA TODOS LOS ROLES --}}
-                    <li>
-                        <a href="{{route('profile.edit')}}">
-                            <i class="bi bi-person"></i>
-                            {{ Auth::user()->name }}
-                        </a>
-                    </li>
+    <div class="panel-container">
+        
+        {{-- Incluimos el sidebar reutilizable --}}
+        @include('layouts.sidebar')
 
-                    {{-- ENLACE CONDICIONAL PARA "MASCOTAS" --}}
-                    <li>
-                        @if(Auth::user()->isVeterinario())
-                            {{-- Si es veterinario, apunta a una ruta diferente --}}
-                            <a href="{{route('veterinario.mascotas.index')}}"> 
-                                <i class="bi bi-heart-pulse"></i> {{-- Icono diferente para distinguir --}}
-                                Gestionar Mascotas
-                            </a>
-                        @else
-                            {{-- Para clientes y administradores, apunta a la ruta normal --}}
-                            <a href="{{route('mascotas.index')}}">
-                                <i class="bi bi-heart"></i>
-                                Mis Mascotas
-                            </a>
-                        @endif
-                    </li>
-
-                    {{-- MÁS ENLACES COMUNES --}}
-                    <li>
-                        <a href="{{route('citas.index')}}">
-                            <i class="bi bi-calendar-check"></i>
-                            Citas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="bi bi-clock-history"></i>
-                            Historial
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class="bi bi-archive"></i>
-                            Archivo
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tratamientos.index')}}">
-                            <i class="bi bi-prescription2"></i>
-                            Tratamiento
-                        </a>
-                    </li>
-
-                    {{-- ENLACES SOLO PARA ADMINISTRADORES --}}
-                    @if(Auth::user()->isAdmin())
-                        <li>
-                            <a href="#">
-                                <i class="bi bi-gear"></i>
-                                Configuración
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="bi bi-list-check"></i>
-                                Logs
-                            </a>
-                        </li>
-                    @endif
-
-                    {{-- ENLACE UNIVERSAL DE "SALIR" --}}
-                    <li>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <a href="{{ route('logout') }}" 
-                               onclick="event.preventDefault(); this.closest('form').submit();">
-                                <i class="bi bi-box-arrow-right"></i>
-                                Salir
-                            </a>
-                        </form>
-                    </li>
-                </ul>
-            </nav>
-           
-        </div>
-
-        <!-- Main Content -->
-        <div class="dashboard-main">
+        {{-- El contenido del dashboard usará las clases de dashboard.css --}}
+        <main class="panel-main">
             <header class="dashboard-header">
                 <div class="user-info">
                     <div class="user-avatar">
@@ -123,7 +41,8 @@
                 </div>
             </header>
 
-            <main class="dashboard-content">
+            {{-- Usamos 'dashboard-content' para que los estilos de padding, etc., apliquen --}}
+            <div class="dashboard-content">
                 <!-- Welcome Card -->
                 <div class="welcome-card">
                     <h1>Dashboard</h1>
@@ -161,11 +80,11 @@
                                     {{ $cita->servicio->nombre }} para <strong>{{ $cita->mascota->nombre }}</strong>
                                 </div>
                                 <div class="appointment-time">
-                                    <span><i class="bi bi-calendar-event"></i> {{ $cita->fecha_hora->format('d/m/Y') }}</span>
-                                    <span><i class="bi bi-clock"></i> {{ $cita->fecha_hora->format('H:i') }}h</span>
+                                    <span><i class="bi bi-calendar-event"></i> {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('d/m/Y') }}</span>
+                                    <span><i class="bi bi-clock"></i> {{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }}h</span>
                                 </div>
                                 <div class="appointment-actions">
-                                    <a href="{{-- route('citas.show', $cita->id) --}}" class="btn-accept">Detalles</a>
+                                    <a href="{{ route('citas.show', $cita->id) }}" class="btn-accept">Detalles</a>
                                 </div>
                             </div>
                         @empty
@@ -175,8 +94,8 @@
                         @endforelse
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>
