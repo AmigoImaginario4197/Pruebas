@@ -15,7 +15,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
-    <div class="panel-container">
+    <div class="panel-container">     
         
         @include('layouts.sidebar')
 
@@ -23,10 +23,10 @@
             <header class="panel-header">
                 <div class="header-title">
                     <h3>Gestión de Usuarios</h3>
-                    <p>Administra las cuentas del sistema.</p>
+                    <p>Administra las cuentas del sistema (solo para administradores).</p>
                 </div>
                 <div class="header-actions">
-                    <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
+                    <a href="{{ route('users.create') }}" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Añadir Usuario
                     </a>
                 </div>
@@ -40,11 +40,9 @@
                     </div>
                 @endif
 
-                {{-- ========================================================= --}}
-                {{-- 1. FORMULARIO DE BÚSQUEDA (CON BOTÓN "BUSCAR" VISIBLE) --}}
-                {{-- ========================================================= --}}
+                {{-- Formulario de Búsqueda --}}
                 <div class="card p-3 mb-4">
-                    <form action="{{ route('admin.usuarios.index') }}" method="GET" class="row gx-3 gy-2 align-items-end">
+                    <form action="{{ route('users.index') }}" method="GET" class="row gx-3 gy-2 align-items-end">
                         <div class="col-md-5">
                             <label for="search" class="form-label">Buscar Usuario</label>
                             <input type="text" name="search" id="search" class="form-control" placeholder="Nombre o email..." value="{{ request('search') }}">
@@ -58,75 +56,59 @@
                                 <option value="admin" {{ request('rol') == 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
                         </div>
-                        {{-- Aquí están los botones Buscar y Limpiar, uno al lado del otro --}}
                         <div class="col-md-3 d-flex mt-3 mt-md-0">
-                            {{-- BOTÓN BUSCAR, VISIBLE Y FUNCIONAL --}}
-                            <button type="submit" class="btn btn-info w-100 me-2">Buscar</button>
-                            <a href="{{ route('admin.usuarios.index') }}" class="btn btn-secondary w-100">Limpiar</a>
+                            <button type="submit" class="btn btn-secondary w-100 me-2">Buscar</button>
+                            <a href="{{ route('users.index') }}" class="btn btn-secondary w-100">Limpiar</a>
                         </div>
                     </form>
                 </div>
 
-                {{-- ========================================================= --}}
-                {{-- 2. TABLA DE USUARIOS (CON BOTONES DE ACCIÓN CORREGIDOS) --}}
-                {{-- ========================================================= --}}
+                {{-- Tabla de Usuarios --}}
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Rol</th>
-                                <th class="text-end">Acciones</th>
-                            </tr>
+                            <tr><th>Nombre</th><th>Email</th><th>Rol</th><th class="text-end">Acciones</th></tr>
                         </thead>
                         <tbody>
                             @forelse ($users as $user)
                                 <tr>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
-                                    <td>
-                                        <span class="badge 
-                                            @if($user->rol == 'admin') bg-danger 
-                                            @elseif($user->rol == 'veterinario') bg-primary 
-                                            @else bg-secondary @endif">
-                                            {{ ucfirst($user->rol) }}
-                                        </span>
-                                    </td>
+                                    <td><span class="badge @if($user->rol == 'admin') bg-danger @elseif($user->rol == 'veterinario') bg-primary @else bg-secondary @endif">{{ ucfirst($user->rol) }}</span></td>
                                     <td class="text-end">
-                                        {{-- SOLUCIÓN DEFINITIVA: Un div con d-flex para agrupar los botones --}}
-                                        <div class="d-flex justify-content-end gap-2">
-                                            {{-- BOTÓN "VER" AÑADIDO --}}
-                                            <a href="{{ route('admin.usuarios.show', $user) }}" class="btn btn-sm btn-light" title="Ver"><i class="bi bi-eye"></i></a>
-                                            
-                                            {{-- BOTÓN "EDITAR" --}}
-                                            <a href="{{ route('admin.usuarios.edit', $user) }}" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
-                                            
-                                            {{-- BOTÓN "BORRAR" (dentro de su formulario) --}}
-                                            <form action="{{ route('admin.usuarios.destroy', $user) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar a este usuario?');">
+                                        
+                                        {{-- =============================================== --}}
+                                        {{--      AQUÍ ESTÁ LA SOLUCIÓN DEFINITIVA           --}}
+                                        {{-- Usamos la misma estructura que en 'mascotas'     --}}
+                                        {{-- =============================================== --}}
+                                        <div class="item-actions justify-content-end">
+                                            <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-secondary" title="Ver"><i class="bi bi-eye"></i></a>
+                                            <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                                            <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('¿Estás seguro?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </div>
+
                                     </td>
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-4">No hay ningún usuario con la información proporcionada.</td>
-                                </tr>
+                                <tr><td colspan="4" class="text-center py-4">No se encontraron usuarios con los criterios de búsqueda.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{-- 3. PAGINACIÓN --}}
+                {{-- Paginación --}}
                 <div class="mt-4 d-flex justify-content-center">
                     {{ $users->links() }}
                 </div>
             </div>
         </main>
+
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

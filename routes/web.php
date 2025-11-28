@@ -1,7 +1,6 @@
 <?php
 
 // --- IMPORTS ---
-// Agrupamos todos los controladores que usaremos.
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistorialMedicoController;
@@ -12,7 +11,6 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // ========== RUTAS PÚBLICAS ==========
-// Accesibles para cualquier visitante, no requieren inicio de sesión.
 Route::get('/', function () { return view('home'); })->name('home');
 Route::get('/presentacion', function () { return view('presentacion'); })->name('presentacion');
 Route::get('/faqs', function () { return view('faqs'); })->name('faqs');
@@ -27,12 +25,10 @@ Route::prefix('legal')->name('legal.')->group(function () {
 
 
 // ========== RUTAS DE AUTENTICACIÓN ==========
-// Manejan el login, registro, logout, recuperación de contraseña, etc.
 require __DIR__.'/auth.php';
 
 
 // ========== RUTAS PRIVADAS (PANEL DE CONTROL) ==========
-// Requieren que el usuario haya iniciado sesión y verificado su email.
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- Panel Principal ---
@@ -44,8 +40,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // --- Gestión de Mascotas ---
-    // Esta única línea ahora maneja correctamente todas las rutas necesarias,
-    // incluyendo las de 'show' y 'edit' que solicitaste.
     Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
 
     // Ruta especial para que los veterinarios vean el listado general de mascotas
@@ -57,11 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('citas', CitaController::class);
     Route::resource('tratamientos', TratamientoController::class);
     Route::resource('historial', HistorialMedicoController::class);
-
-    // --- Panel de Administración (Solo para Admins) ---
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        // Ejemplo: Gestionar todos los usuarios del sistema
-        Route::resource('usuarios', UserController::class);
-    });
+    
+    Route::resource('users', UserController::class)->middleware('role:admin');
          
 });

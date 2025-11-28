@@ -22,35 +22,33 @@
             </li>
 
             {{-- ========================================================== --}}
-            {{-- CAMBIO 1: AÑADIDO - Enlace a Usuarios solo para Admin --}}
+            {{--                CORRECCIÓN CLAVE AQUÍ                    --}}
             {{-- ========================================================== --}}
+            {{-- Enlace a Usuarios solo para Admin (ahora apunta a 'users.*') --}}
             @if(Auth::user()->isAdmin())
                 <li>
-                    <a href="{{ route('admin.usuarios.index') }}" class="{{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
+                    {{-- CAMBIO 1: La ruta ahora es 'users.index' --}}
+                    {{-- CAMBIO 2: La comprobación de ruta activa es 'users.*' --}}
+                    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i>
                         Usuarios
                     </a>
                 </li>
             @endif
 
-            {{-- =============================================================== --}}
-            {{-- CAMBIO 2: MODIFICADO - Lógica visual para el enlace a Mascotas --}}
-            {{-- =============================================================== --}}
+            {{-- Lógica para el enlace a Mascotas (ya estaba correcta) --}}
             <li>
                 @if(Auth::user()->isVeterinario())
-                    {{-- Los veterinarios ven "Mascotas" y van a su ruta específica --}}
                     <a href="{{ route('veterinario.mascotas.index') }}" class="{{ request()->routeIs('veterinario.mascotas.index') ? 'active' : '' }}"> 
                         <i class="bi bi-heart-pulse"></i>
                         Mascotas
                     </a>
                 @elseif(Auth::user()->isAdmin())
-                    {{-- Los administradores ven "Mascotas" y van a la ruta general --}}
                      <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
                         <i class="bi bi-heart"></i>
                         Mascotas
                     </a>
                 @else
-                    {{-- Por defecto, los clientes ven "Mis Mascotas" --}}
                     <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
                         <i class="bi bi-heart"></i>
                         Mis Mascotas
@@ -67,7 +65,7 @@
             </li>
 
             <li>
-                <a href="{{ route('historial.index') }}"> {{-- Ruta ya existente y descomentada --}}
+                <a href="{{ route('historial.index') }}" class="{{ request()->routeIs('historial.*') ? 'active' : '' }}">
                     <i class="bi bi-clock-history"></i>
                     Historial Médico
                 </a>
@@ -107,7 +105,7 @@
     </nav>
 </div>
 
-{{-- Estilo para el enlace activo --}}
+{{-- El estilo para el enlace activo se queda igual, es correcto --}}
 <style>
     .sidebar-menu a.active {
         background-color: rgba(255, 255, 255, 0.1);
