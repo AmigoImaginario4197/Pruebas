@@ -15,6 +15,7 @@ class Medicamento extends Model
         'nombre',
         'dosis_recomendada',
         'descripcion',
+        'foto',
     ];
 
     public function tratamientos()

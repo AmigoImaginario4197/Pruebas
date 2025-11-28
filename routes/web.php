@@ -1,6 +1,5 @@
 <?php
 
-// --- IMPORTS ---
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistorialMedicoController;
@@ -9,6 +8,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UserController; 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DisponibilidadController;
+use App\Http\Controllers\MedicamentoController;
+use App\Http\Controllers\PlanDiarioController;
 
 // ========== RUTAS PÚBLICAS ==========
 Route::get('/', function () { return view('home'); })->name('home');
@@ -53,5 +55,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('historial', HistorialMedicoController::class);
     
     Route::resource('users', UserController::class)->middleware('role:admin');
-         
+   
+    Route::resource('disponibilidad', DisponibilidadController::class)->middleware('role:admin,veterinario');
+    Route::resource('medicamentos', MedicamentoController::class)->middleware('role:admin,veterinario');
+    Route::resource('plan-diario', PlanDiarioController::class)->middleware('role:admin,veterinario');
+
+ // Ruta para cuando el pago es exitoso
+Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');
 });

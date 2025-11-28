@@ -12,6 +12,10 @@ class Cita extends Model
     protected $table = 'cita';
 
     protected $fillable = [
+        'user_id',       
+        'mascota_id',     
+        'veterinario_id',
+        'servicio_id',
         'fecha_hora',
         'estado',
         'motivo',
@@ -36,4 +40,5 @@ class Cita extends Model
     {
         return $this->belongsTo(Servicio::class, 'servicio_id');
     }
+    
 }

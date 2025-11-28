@@ -100,7 +100,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function disponibilidades()
     {
-        return $this->hasMany(Disponibilidad::class, 'user_id');
+        return $this->hasMany(Disponibilidad::class, 'veterinario_id');
     }
 
     public function tratamientos()

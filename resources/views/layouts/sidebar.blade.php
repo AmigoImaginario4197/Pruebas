@@ -5,15 +5,13 @@
     
     <nav class="sidebar-menu">
         <ul>
-            {{-- Enlace al Perfil del Usuario --}}
+            {{-- === ENLACES COMUNES PARA TODOS === --}}
             <li>
                 <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
                     <i class="bi bi-person"></i>
                     {{ Auth::user()->name }}
                 </a>
             </li>
-            
-            {{-- Enlace al Dashboard --}}
             <li>
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="bi bi-grid-1x2-fill"></i>
@@ -21,83 +19,84 @@
                 </a>
             </li>
 
-            {{-- ========================================================== --}}
-            {{--                CORRECCIÓN CLAVE AQUÍ                    --}}
-            {{-- ========================================================== --}}
-            {{-- Enlace a Usuarios solo para Admin (ahora apunta a 'users.*') --}}
-            @if(Auth::user()->isAdmin())
-                <li>
-                    {{-- CAMBIO 1: La ruta ahora es 'users.index' --}}
-                    {{-- CAMBIO 2: La comprobación de ruta activa es 'users.*' --}}
-                    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
-                        <i class="bi bi-people"></i>
-                        Usuarios
-                    </a>
-                </li>
-            @endif
-
-            {{-- Lógica para el enlace a Mascotas (ya estaba correcta) --}}
+            {{-- === ENLACES DE GESTIÓN PARA CLIENTES Y PERSONAL === --}}
+            {{-- Mascotas --}}
             <li>
                 @if(Auth::user()->isVeterinario())
                     <a href="{{ route('veterinario.mascotas.index') }}" class="{{ request()->routeIs('veterinario.mascotas.index') ? 'active' : '' }}"> 
-                        <i class="bi bi-heart-pulse"></i>
-                        Mascotas
-                    </a>
-                @elseif(Auth::user()->isAdmin())
-                     <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
-                        <i class="bi bi-heart"></i>
-                        Mascotas
+                        <i class="bi bi-heart-pulse"></i> Mascotas
                     </a>
                 @else
                     <a href="{{ route('mascotas.index') }}" class="{{ request()->routeIs('mascotas.*') ? 'active' : '' }}">
                         <i class="bi bi-heart"></i>
-                        Mis Mascotas
+                        {{ Auth::user()->isCliente() ? 'Mis Mascotas' : 'Mascotas' }}
                     </a>
                 @endif
             </li>
-
-            {{-- Enlace a Citas --}}
+            {{-- Citas --}}
             <li>
                 <a href="{{ route('citas.index') }}" class="{{ request()->routeIs('citas.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-check"></i>
-                    Citas
+                    {{ Auth::user()->isCliente() ? 'Mis Citas' : 'Agenda de Citas' }}
                 </a>
             </li>
+            {{-- Historial Médico (Solo personal clínico) --}}
+            @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
+                <li>
+                    <a href="{{ route('historial.index') }}" class="{{ request()->routeIs('historial.*') ? 'active' : '' }}">
+                        <i class="bi bi-collection"></i> Historiales Médicos
+                    </a>
+                </li>
+            @endif
 
-            <li>
-                <a href="{{ route('historial.index') }}" class="{{ request()->routeIs('historial.*') ? 'active' : '' }}">
-                    <i class="bi bi-clock-history"></i>
-                    Historial Médico
-                </a>
-            </li>
-
-            <li>
-                <a href="#">
-                    <i class="bi bi-archive"></i>
-                    Archivo
-                </a>
-            </li>
-            
-            {{-- Enlace a Tratamientos --}}
+            {{-- ========================================================== --}}
+            {{--                AQUÍ ESTÁ LA CORRECCIÓN CLAVE             --}}
+            {{-- ========================================================== --}}
+            {{-- Tratamientos (Visible para todos los roles) --}}
             <li>
                 <a href="{{ route('tratamientos.index') }}" class="{{ request()->routeIs('tratamientos.*') ? 'active' : '' }}">
                     <i class="bi bi-prescription2"></i>
-                    Tratamiento
+                    {{ Auth::user()->isCliente() ? 'Mis Tratamientos' : 'Tratamientos' }}
                 </a>
             </li>
 
-            {{-- Enlaces solo para Administradores --}}
-            @if(Auth::user()->isAdmin())
-                <li><a href="#"><i class="bi bi-list-check"></i> Logs</a></li>
+            {{-- === HERRAMIENTAS DE GESTIÓN INTERNA (SOLO PERSONAL) === --}}
+            @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
+                <li>
+                    <a href="{{ route('plan-diario.index') }}" class="{{ request()->routeIs('plan-diario.*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-event"></i> Plan Diario
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('disponibilidad.index') }}" class="{{ request()->routeIs('disponibilidad.*') ? 'active' : '' }}">
+                        <i class="bi bi-clock-fill"></i> Disponibilidad
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('medicamentos.index') }}" class="{{ request()->routeIs('medicamentos.*') ? 'active' : '' }}">
+                        <i class="bi bi-capsule-pill"></i> Catálogo Medicamentos
+                    </a>
+                </li>
             @endif
 
-            {{-- Enlace universal de "Salir" --}}
+            {{-- === PANEL DE ADMINISTRACIÓN (SOLO ADMIN) === --}}
+            @if(Auth::user()->isAdmin())
+                <li>
+                    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i> Usuarios
+                    </a>
+                </li>
+                <li>
+                    <a href="#"><i class="bi bi-list-check"></i> Logs</a>
+                </li>
+            @endif
+
+            {{-- === SALIR (UNIVERSAL) === --}}
             <li>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Salir
+                        <i class="bi bi-box-arrow-right"></i> Salir
                     </a>
                 </form>
             </li>
@@ -105,7 +104,6 @@
     </nav>
 </div>
 
-{{-- El estilo para el enlace activo se queda igual, es correcto --}}
 <style>
     .sidebar-menu a.active {
         background-color: rgba(255, 255, 255, 0.1);

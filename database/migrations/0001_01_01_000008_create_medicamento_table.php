@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->string('nombre');
             $table->string('dosis_recomendada')->nullable();
             $table->text('descripcion')->nullable();
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }

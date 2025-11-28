@@ -12,6 +12,7 @@ class Disponibilidad extends Model
     protected $table = 'disponibilidad';
 
     protected $fillable = [
+        'veterinario_id',
         'fecha',
         'hora_inicio',
         'hora_fin',
@@ -19,7 +20,7 @@ class Disponibilidad extends Model
 
     public function veterinario()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'veterinario_id');
     }
 
 }

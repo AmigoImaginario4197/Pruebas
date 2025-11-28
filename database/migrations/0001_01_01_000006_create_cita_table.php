@@ -8,6 +8,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('cita', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('mascota_id')->constrained('mascota')->onDelete('cascade');
             $table->foreignId('veterinario_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('servicio_id')->constrained('servicio')->onDelete('cascade');
