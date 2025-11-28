@@ -21,7 +21,7 @@ class Cita extends Model
         'motivo',
     ];
 
-    public function usuario()
+    public function cliente()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

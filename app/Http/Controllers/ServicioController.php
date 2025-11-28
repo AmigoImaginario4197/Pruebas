@@ -2,63 +2,93 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Servicio;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class ServicioController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra los detalles de un servicio específico.
+     */
+    public function show(Servicio $servicio)
+{
+    return view('servicios.show', compact('servicio'));
+}
+    /**
+     * Constructor: Solo el administrador puede acceder a cualquier método de este controlador.
+     */
+    public function __construct()
+    {
+        $this->middleware('role:admin');
+    }
+
+    /**
+     * Muestra la lista de servicios.
      */
     public function index()
     {
-        //
+        // Ordenamos por nombre y paginamos
+        $servicios = Servicio::orderBy('nombre')->paginate(10);
+        return view('servicios.index', compact('servicios'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra el formulario de creación.
      */
     public function create()
     {
-        //
+        return view('servicios.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda el nuevo servicio en la base de datos.
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            // Usamos 'servicio' en singular porque así se llama tu tabla
+            'nombre' => 'required|string|max:255|unique:servicio',
+            'descripcion' => 'nullable|string|max:500',
+            'precio' => 'required|numeric|min:0',
+        ]);
+
+        Servicio::create($validated);
+
+        return redirect()->route('servicios.index')->with('success', 'Servicio creado correctamente.');
     }
 
     /**
-     * Display the specified resource.
+     * Muestra el formulario de edición.
      */
-    public function show(string $id)
+    public function edit(Servicio $servicio)
     {
-        //
+        return view('servicios.edit', compact('servicio'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Actualiza el servicio en la base de datos.
      */
-    public function edit(string $id)
+    public function update(Request $request, Servicio $servicio)
     {
-        //
+        $validated = $request->validate([
+            // Ignoramos el ID actual para la validación de 'unique'
+            'nombre' => 'required|string|max:255|unique:servicio,nombre,' . $servicio->id,
+            'descripcion' => 'nullable|string|max:500',
+            'precio' => 'required|numeric|min:0',
+        ]);
+
+        $servicio->update($validated);
+
+        return redirect()->route('servicios.index')->with('success', 'Servicio actualizado correctamente.');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Elimina el servicio.
      */
-    public function update(Request $request, string $id)
+    public function destroy(Servicio $servicio)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $servicio->delete();
+        return back()->with('success', 'Servicio eliminado correctamente.');
     }
 }

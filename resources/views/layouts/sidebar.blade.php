@@ -49,9 +49,6 @@
                 </li>
             @endif
 
-            {{-- ========================================================== --}}
-            {{--                AQUÍ ESTÁ LA CORRECCIÓN CLAVE             --}}
-            {{-- ========================================================== --}}
             {{-- Tratamientos (Visible para todos los roles) --}}
             <li>
                 <a href="{{ route('tratamientos.index') }}" class="{{ request()->routeIs('tratamientos.*') ? 'active' : '' }}">
@@ -81,6 +78,13 @@
 
             {{-- === PANEL DE ADMINISTRACIÓN (SOLO ADMIN) === --}}
             @if(Auth::user()->isAdmin())
+                {{-- NUEVO ENLACE A SERVICIOS --}}
+                <li>
+                    <a href="{{ route('servicios.index') }}" class="{{ request()->routeIs('servicios.*') ? 'active' : '' }}">
+                        <i class="bi bi-tags-fill"></i> Servicios
+                    </a>
+                </li>
+                
                 <li>
                     <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i> Usuarios

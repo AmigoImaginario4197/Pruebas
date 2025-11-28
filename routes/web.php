@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DisponibilidadController;
 use App\Http\Controllers\MedicamentoController;
 use App\Http\Controllers\PlanDiarioController;
+use App\Http\Controllers\ServicioController;
 
 // ========== RUTAS PÚBLICAS ==========
 Route::get('/', function () { return view('home'); })->name('home');
@@ -62,4 +63,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
  // Ruta para cuando el pago es exitoso
 Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');
+Route::resource('servicios', ServicioController::class)->middleware('role:admin');
+Route::patch('/citas/{cita}/cancelar', [CitaController::class, 'cancelar'])->name('citas.cancelar');
 });

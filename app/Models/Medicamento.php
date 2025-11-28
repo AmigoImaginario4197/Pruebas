@@ -19,8 +19,9 @@ class Medicamento extends Model
     ];
 
     public function tratamientos()
-    {
-        return $this->belongsToMany(Tratamiento::class, 'tratamiento_medicamento', 'medicamento_id', 'tratamiento_id')
-                    ->withPivot('frecuencia', 'duracion');
-    }
+{
+    return $this->belongsToMany(Tratamiento::class, 'tratamiento_medicamento')
+                ->withPivot('dosis', 'frecuencia', 'duracion', 'instrucciones')
+                ->withTimestamps();
+}
 }

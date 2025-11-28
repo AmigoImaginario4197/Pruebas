@@ -7,6 +7,8 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
+    
+    {{-- Vite cargará app.js, que a su vez carga cita-form-manager.js --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
@@ -45,8 +47,20 @@
                                                 @foreach ($mascotas as $mascota)
                                                     <option value="{{ $mascota->id }}" @selected(old('mascota_id') == $mascota->id)>
                                                         {{ $mascota->nombre }} ({{ $mascota->especie }})
-                                                        {{-- Si no es cliente, mostramos de quién es la mascota --}}
                                                         @if(!Auth::user()->isCliente()) - Dueño: {{ $mascota->usuario->name }} @endif
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        {{-- Selector de Servicio (Con data-price para JS) --}}
+                                        <div class="col-md-6 mb-3">
+                                            <label for="servicio_id" class="form-label">Tipo de Servicio</label>
+                                            <select name="servicio_id" id="servicio_id" class="form-select" required>
+                                                <option value="" data-price="0">-- Seleccionar Servicio --</option>
+                                                @foreach ($servicios as $servicio)
+                                                    <option value="{{ $servicio->id }}" data-price="{{ $servicio->precio }}" @selected(old('servicio_id') == $servicio->id)>
+                                                        {{ $servicio->nombre }} - ${{ number_format($servicio->precio, 2) }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -73,12 +87,12 @@
 
                                         {{-- Motivo --}}
                                         <div class="col-12 mb-3">
-                                            <label for="motivo" class="form-label">Motivo de la consulta</label>
-                                            <textarea name="motivo" id="motivo" class="form-control" rows="2" placeholder="Ej: Vacunación anual, revisión general..." required>{{ old('motivo') }}</textarea>
+                                            <label for="motivo" class="form-label">Motivo / Notas adicionales</label>
+                                            <textarea name="motivo" id="motivo" class="form-control" rows="2" placeholder="Ej: Revisión anual..." required>{{ old('motivo') }}</textarea>
                                         </div>
                                     </div>
                                     
-                                    {{-- Botón para Admin/Vet (sin pago) --}}
+                                    {{-- Botón para Admin/Vet (sin pago visual) --}}
                                     @if(!Auth::user()->isCliente())
                                         <div class="text-end">
                                             <a href="{{ route('citas.index') }}" class="btn btn-secondary me-2">Cancelar</a>
@@ -96,10 +110,14 @@
                                     <div class="card-body">
                                         <h5 class="card-title">Resumen de Pago</h5>
                                         <hr>
-                                        <div class="d-flex justify-content-between mb-2"><span>Consulta General</span><strong>$30.00</strong></div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Servicio Base</span>
+                                            {{-- El ID es usado por cita-form-manager.js --}}
+                                            <strong id="service-price">$0.00</strong>
+                                        </div>
                                         <div class="d-flex justify-content-between mb-2"><span class="text-muted">Impuestos</span><span class="text-muted">$0.00</span></div>
                                         <hr>
-                                        <div class="d-flex justify-content-between mb-4"><strong class="fs-5">Total a Pagar</strong><strong class="fs-5 text-primary">$30.00</strong></div>
+                                        <div class="d-flex justify-content-between mb-4"><strong class="fs-5">Total a Pagar</strong><strong class="fs-5 text-primary" id="total-price">$0.00</strong></div>
 
                                         <div class="d-grid gap-2">
                                             <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-credit-card-2-front"></i> Pagar y Reservar</button>

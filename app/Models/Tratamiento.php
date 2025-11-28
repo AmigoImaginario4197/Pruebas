@@ -38,4 +38,11 @@ class Tratamiento extends Model
     {
         return $this->belongsTo(User::class, 'veterinario_id');
     }
+
+     public function medicamentos()
+    {
+        return $this->belongsToMany(Medicamento::class, 'tratamiento_medicamento')
+                    ->withPivot('dosis', 'frecuencia', 'duracion', 'instrucciones')
+                    ->withTimestamps();
+    }
 }
