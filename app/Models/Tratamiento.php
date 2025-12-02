@@ -13,6 +13,8 @@ class Tratamiento extends Model
     protected $table = 'tratamiento'; 
 
     protected $fillable = [
+        'mascota_id',
+        'veterinario_id',
         'diagnostico',
         'observaciones',
         'fecha_inicio',

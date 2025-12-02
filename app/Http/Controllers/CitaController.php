@@ -67,7 +67,7 @@ class CitaController extends Controller
             'motivo'         => 'required|string|max:255',
         ]);
 
-        // Validación de solapamiento (1 hora)
+        // Validación de conflictos de horario
         $inicio = Carbon::parse($validated['fecha_hora']);
         $fin = $inicio->copy()->addHour();
         
