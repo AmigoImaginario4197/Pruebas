@@ -6,18 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::create('plan_diario', function (Blueprint $table) {
+        Schema::create('agenda', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mascota_id')->constrained('mascota')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('mascota_id')->nullable()->constrained('mascota')->onDelete('cascade');
             $table->date('fecha');
             $table->string('actividad');
-            $table->string('hora')->nullable();
             $table->text('observaciones')->nullable();
+            $table->time('hora_inicio');
+            $table->time('hora_fin')->nullable(); 
             $table->timestamps();
         });
     }
 
     public function down(): void {
-        Schema::dropIfExists('plan_diario');
+        Schema::dropIfExists('agenda');
     }
 };

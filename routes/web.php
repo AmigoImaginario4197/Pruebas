@@ -10,7 +10,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DisponibilidadController;
 use App\Http\Controllers\MedicamentoController;
-use App\Http\Controllers\PlanDiarioController;
+use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\ServicioController;
 
 // ========== RUTAS PÚBLICAS ==========
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
    
     Route::resource('disponibilidad', DisponibilidadController::class)->middleware('role:admin,veterinario');
     Route::resource('medicamentos', MedicamentoController::class)->middleware('role:admin,veterinario');
-    Route::resource('plan-diario', PlanDiarioController::class)->middleware('role:admin,veterinario');
+    Route::resource('agenda', AgendaController::class)->middleware('role:admin,veterinario');
 
  // Ruta para cuando el pago es exitoso
 Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');

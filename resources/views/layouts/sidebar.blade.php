@@ -49,7 +49,7 @@
                 </li>
             @endif
 
-            {{-- Tratamientos (Visible para todos los roles) --}}
+            {{-- Tratamientos (Visible para todos, el texto cambia) --}}
             <li>
                 <a href="{{ route('tratamientos.index') }}" class="{{ request()->routeIs('tratamientos.*') ? 'active' : '' }}">
                     <i class="bi bi-prescription2"></i>
@@ -60,8 +60,8 @@
             {{-- === HERRAMIENTAS DE GESTIÓN INTERNA (SOLO PERSONAL) === --}}
             @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
                 <li>
-                    <a href="{{ route('plan-diario.index') }}" class="{{ request()->routeIs('plan-diario.*') ? 'active' : '' }}">
-                        <i class="bi bi-calendar-event"></i> Plan Diario
+                    <a href="{{ route('agenda.index') }}" class="{{ request()->routeIs('agenda.*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-event"></i> Agenda / Plan Diario
                     </a>
                 </li>
                 <li>
@@ -78,13 +78,11 @@
 
             {{-- === PANEL DE ADMINISTRACIÓN (SOLO ADMIN) === --}}
             @if(Auth::user()->isAdmin())
-                {{-- NUEVO ENLACE A SERVICIOS --}}
                 <li>
                     <a href="{{ route('servicios.index') }}" class="{{ request()->routeIs('servicios.*') ? 'active' : '' }}">
                         <i class="bi bi-tags-fill"></i> Servicios
                     </a>
                 </li>
-                
                 <li>
                     <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i> Usuarios
