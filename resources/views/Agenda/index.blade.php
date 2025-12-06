@@ -20,8 +20,9 @@
                 </div>
                 @if(!Auth::user()->isCliente())
                     <div class="header-actions">
-                        <a href="{{ route('agenda.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Nuevo Evento
+<a href="{{ route('citas.create') }}" class="btn btn-primary">
+    <i class="bi bi-calendar-plus"></i> Nueva Cita
+</a>                            <i class="bi bi-plus-circle"></i> Nuevo Evento
                         </a>
                     </div>
                 @endif

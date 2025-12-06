@@ -61,7 +61,7 @@
             @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
                 <li>
                     <a href="{{ route('agenda.index') }}" class="{{ request()->routeIs('agenda.*') ? 'active' : '' }}">
-                        <i class="bi bi-calendar-event"></i> Agenda / Plan Diario
+                        <i class="bi bi-calendar-event"></i> Agenda 
                     </a>
                 </li>
                 <li>

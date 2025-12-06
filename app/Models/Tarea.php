@@ -5,23 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Agenda extends Model
+class Tarea extends Model
 {
     use HasFactory;
 
-    protected $table = 'agenda';
+    protected $table = 'tareas';
 
     protected $fillable = [
         'user_id',
-        'mascota_id',
-        'fecha',
-        'hora_inicio', 
-        'hora_fin',
-        'actividad',
+        'titulo',
+        'inicio',
+        'fin',
+        'color',
         'observaciones',
     ];
 
-    public function usuario()
+      protected $casts = [
+        'inicio' => 'datetime',
+        'fin'    => 'datetime',
+    ];
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
