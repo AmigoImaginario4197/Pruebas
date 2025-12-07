@@ -6,6 +6,7 @@ use App\Models\Cita;
 use App\Models\Mascota;
 use App\Models\User;
 use App\Models\Servicio;
+use App\Models\Disponibilidad; // <--- ASEGÚRATE DE TENER ESTE MODELO
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,73 @@ class CitaController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    // --- API: OBTENER HUECOS LIBRES ---
+    public function obtenerHorarios(Request $request)
+    {
+        $request->validate([
+            'fecha' => 'required|date',
+            'veterinario_id' => 'required|exists:users,id',
+        ]);
+
+        $fecha = Carbon::parse($request->fecha);
+        $diaSemana = $fecha->dayOfWeek; // 0 (Domingo) a 6 (Sábado)
+
+        // 1. Buscar horario de trabajo del veterinario
+        $horarioTrabajo = Disponibilidad::where('user_id', $request->veterinario_id)
+            ->where('dia_semana', $diaSemana)
+            ->first();
+
+        if (!$horarioTrabajo) {
+            return response()->json(['mensaje' => 'El veterinario no trabaja este día.'], 404);
+        }
+
+        // 2. Obtener citas ya ocupadas ese día
+        // Nota: Como tus citas duran 1 hora (según tu store), debemos bloquear el rango completo
+        $citasOcupadas = Cita::where('veterinario_id', $request->veterinario_id)
+            ->whereDate('fecha_hora', $request->fecha)
+            ->where('estado', '!=', 'cancelada')
+            ->get(['fecha_hora']);
+
+        // 3. Generar slots cada 30 minutos
+        $intervalo = 30; 
+        $horaInicio = Carbon::parse($request->fecha . ' ' . $horarioTrabajo->hora_inicio);
+        $horaFin = Carbon::parse($request->fecha . ' ' . $horarioTrabajo->hora_fin);
+        
+        $slotsDisponibles = [];
+
+        while ($horaInicio->lessThan($horaFin)) {
+            // Verificamos si este slot choca con alguna cita existente
+            $esLibre = true;
+            $inicioSlot = $horaInicio->copy();
+            $finSlot = $horaInicio->copy()->addMinutes($intervalo); // El slot dura 30 min (o lo que dura tu cita)
+
+            foreach ($citasOcupadas as $cita) {
+                $inicioCita = Carbon::parse($cita->fecha_hora);
+                $finCita = $inicioCita->copy()->addHour(); // Tus citas duran 1 hora
+
+                // Si el slot solapa con una cita existente, no es libre
+                // (Si empieza dentro de una cita O si termina dentro de una cita)
+                if ($inicioSlot->greaterThanOrEqualTo($inicioCita) && $inicioSlot->lessThan($finCita)) {
+                    $esLibre = false;
+                    break;
+                }
+            }
+
+            // Solo agregar si es futuro (si es hoy, no mostrar horas pasadas)
+            if ($esLibre) {
+                if ($fecha->isToday() && $inicioSlot->lessThan(now())) {
+                    // Es una hora pasada de hoy, no agregar
+                } else {
+                    $slotsDisponibles[] = $inicioSlot->format('H:i');
+                }
+            }
+
+            $horaInicio->addMinutes($intervalo);
+        }
+
+        return response()->json($slotsDisponibles);
     }
 
     public function index()
@@ -59,26 +127,35 @@ class CitaController extends Controller
     {
         $user = Auth::user();
 
+        // Validación inicial
         $validated = $request->validate([
             'mascota_id'     => 'required|exists:mascota,id',
             'veterinario_id' => 'required|exists:users,id',
             'servicio_id'    => 'required|exists:servicio,id',
-            'fecha_hora'     => 'required|date|after:now', 
+            'fecha_hora'     => 'required|date', // Quitamos 'after:now' aquí porque JS ya lo filtra, pero validamos conflicto abajo
             'motivo'         => 'required|string|max:255',
         ]);
 
-        // Validación de conflictos de horario
+        // Validación de seguridad: Conflictos de horario
         $inicio = Carbon::parse($validated['fecha_hora']);
+        
+        // Validar que no sea fecha pasada (Backend security)
+        if ($inicio->lessThan(now())) {
+             return back()->withErrors(['fecha_hora' => 'No puedes agendar en el pasado.'])->withInput();
+        }
+
         $fin = $inicio->copy()->addHour();
         
         $conflicto = Cita::where('veterinario_id', $validated['veterinario_id'])
             ->where('estado', '!=', 'cancelada')
             ->where(function ($query) use ($inicio, $fin) {
+                // Si hay alguna cita que empiece entre mi inicio y mi fin
+                // O si mi inicio cae dentro de otra cita
                 $query->whereBetween('fecha_hora', [$inicio->copy()->subMinutes(59), $fin->copy()->subMinute()]);
             })->exists();
 
         if ($conflicto) {
-            return back()->withErrors(['fecha_hora' => 'El veterinario ya tiene una cita ocupada en ese horario.'])->withInput();
+            return back()->withErrors(['fecha_hora' => 'Ese horario acaba de ser ocupado. Por favor elige otro.'])->withInput();
         }
 
         if ($user->rol === 'cliente') {
@@ -171,13 +248,9 @@ class CitaController extends Controller
         return redirect()->route('citas.index')->with('success', 'Cita actualizada correctamente.');
     }
 
-    /**
-     * Acción para CANCELAR (Cambia estado, no borra).
-     */
     public function cancelar(Cita $cita)
     {
         $user = Auth::user();
-        // Seguridad: Solo dueño, vet asignado o admin pueden cancelar
         if ($user->rol !== 'admin' && $user->id !== $cita->user_id && $user->id !== $cita->veterinario_id) {
             abort(403);
         }
@@ -186,12 +259,8 @@ class CitaController extends Controller
         return back()->with('success', 'La cita ha sido cancelada.');
     }
 
-    /**
-     * Acción para BORRAR DE VERDAD (Elimina de la BD).
-     */
     public function destroy(Cita $cita)
     {
-        // Seguridad: SOLO el ADMIN puede borrar registros físicos.
         if (Auth::user()->rol !== 'admin') {
             abort(403, 'Solo el administrador puede eliminar registros permanentemente.');
         }

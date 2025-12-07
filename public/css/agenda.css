@@ -1,0 +1,29 @@
+/* =========================================
+   ESTILOS DE AGENDA (FULLCALENDAR)
+   ========================================= */
+
+#calendar {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    /* Calculamos altura para que encaje en la pantalla sin scroll doble */
+    height: calc(100vh - 180px); 
+    min-height: 600px;
+}
+
+/* Título del mes (Enero 2024) */
+.fc-toolbar-title {
+    font-size: 1.2rem !important;
+    color: #333;
+}
+
+/* Botones de navegación (Hoy, Mes, Semana) */
+.fc-button {
+    font-size: 0.85rem !important;
+}
+
+/* Estilo de los eventos (Citas/Tareas) */
+.fc-event {
+    cursor: pointer;
+    border: none;
+}

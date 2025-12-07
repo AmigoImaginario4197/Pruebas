@@ -8,8 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
     
-    {{-- Vite cargará app.js, que a su vez carga cita-form-manager.js --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/citas.js'])
 </head>
 <body class="font-sans antialiased">
     <div class="panel-container">     
@@ -24,112 +23,109 @@
             </header>
 
             <div class="panel-content">
-                <form action="{{ route('citas.store') }}" method="POST">
-                    @csrf
-                    
-                    <div class="row">
-                        {{-- COLUMNA IZQUIERDA: DATOS DE LA CITA --}}
-                        <div class="@if(Auth::user()->isCliente()) col-md-8 @else col-md-12 @endif">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-4">Detalles de la Consulta</h5>
-                                    
-                                    @if ($errors->any())
-                                        <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
-                                    @endif
+                <div class="card shadow-sm border-0 p-4" style="max-width: 800px; margin: 0 auto;">
+                    <form action="{{ route('citas.store') }}" method="POST">
+                        @csrf
+                        
+                        <div class="row">
+                            <div class="col-md-6 pe-md-4">
+                                <h5 class="mb-4 border-bottom pb-2">Detalles de la Cita</h5>
 
-                                    <div class="row">
-                                        {{-- Selector de Mascota --}}
-                                        <div class="col-md-6 mb-3">
-                                            <label for="mascota_id" class="form-label">Paciente (Mascota)</label>
-                                            <select name="mascota_id" id="mascota_id" class="form-select" required>
-                                                <option value="">-- Seleccionar Mascota --</option>
-                                                @foreach ($mascotas as $mascota)
-                                                    <option value="{{ $mascota->id }}" @selected(old('mascota_id') == $mascota->id)>
-                                                        {{ $mascota->nombre }} ({{ $mascota->especie }})
-                                                        @if(!Auth::user()->isCliente()) - Dueño: {{ $mascota->usuario->name }} @endif
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                {{-- Selector de Veterinario --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Veterinario</label>
+                                    <select name="veterinario_id" id="veterinario_id" class="form-select" required>
+                                        <option value="" selected disabled>-- Selecciona un Doctor --</option>
+                                        @foreach($veterinarios as $vet)
+                                            <option value="{{ $vet->id }}" {{ old('veterinario_id') == $vet->id ? 'selected' : '' }}>
+                                                Dr. {{ $vet->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                                        {{-- Selector de Servicio (Con data-price para JS) --}}
-                                        <div class="col-md-6 mb-3">
-                                            <label for="servicio_id" class="form-label">Tipo de Servicio</label>
-                                            <select name="servicio_id" id="servicio_id" class="form-select" required>
-                                                <option value="" data-price="0">-- Seleccionar Servicio --</option>
-                                                @foreach ($servicios as $servicio)
-                                                    <option value="{{ $servicio->id }}" data-price="{{ $servicio->precio }}" @selected(old('servicio_id') == $servicio->id)>
-                                                        {{ $servicio->nombre }} - ${{ number_format($servicio->precio, 2) }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                {{-- Selector de Fecha --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fecha de la Cita</label>
+                                    <input type="date" id="fecha_selector" class="form-control" min="{{ date('Y-m-d') }}" required>
+                                    <small class="text-muted">Selecciona un veterinario y una fecha para ver horas disponibles.</small>
+                                </div>
 
-                                        {{-- Selector de Veterinario --}}
-                                        <div class="col-md-6 mb-3">
-                                            <label for="veterinario_id" class="form-label">Veterinario</label>
-                                            <select name="veterinario_id" id="veterinario_id" class="form-select" required>
-                                                <option value="">-- Seleccionar Doctor --</option>
-                                                @foreach ($veterinarios as $veterinario)
-                                                    <option value="{{ $veterinario->id }}" @selected(old('veterinario_id') == $veterinario->id)>
-                                                        Dr. {{ $veterinario->name }} @if($veterinario->especialidad) ({{ $veterinario->especialidad }}) @endif
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        {{-- Fecha y Hora --}}
-                                        <div class="col-md-6 mb-3">
-                                            <label for="fecha_hora" class="form-label">Fecha y Hora</label>
-                                            <input type="datetime-local" name="fecha_hora" id="fecha_hora" class="form-control" value="{{ old('fecha_hora') }}" required min="{{ now()->format('Y-m-d\TH:i') }}">
-                                        </div>
-
-                                        {{-- Motivo --}}
-                                        <div class="col-12 mb-3">
-                                            <label for="motivo" class="form-label">Motivo / Notas adicionales</label>
-                                            <textarea name="motivo" id="motivo" class="form-control" rows="2" placeholder="Ej: Revisión anual..." required>{{ old('motivo') }}</textarea>
-                                        </div>
+                                {{-- Contenedor de Huecos (Slots) --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Horarios Disponibles</label>
+                                    <div id="slots-container" class="d-flex flex-wrap gap-2 p-3 border rounded bg-light" style="min-height: 80px;">
+                                        <span class="text-muted fst-italic">Esperando datos...</span>
                                     </div>
                                     
-                                    {{-- Botón para Admin/Vet (sin pago visual) --}}
-                                    @if(!Auth::user()->isCliente())
-                                        <div class="text-end">
-                                            <a href="{{ route('citas.index') }}" class="btn btn-secondary me-2">Cancelar</a>
-                                            <button type="submit" class="btn btn-primary">Agendar Cita</button>
-                                        </div>
-                                    @endif
+                                    {{-- INPUT OCULTO: Aquí se guardará la fecha y hora final para enviar al backend --}}
+                                    <input type="hidden" name="fecha_hora" id="fecha_hora_final" required>
+                                    @error('fecha_hora')
+                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 ps-md-4 border-start">
+                                <h5 class="mb-4 border-bottom pb-2">Información de la Mascota</h5>
+
+                                {{-- Selector de Mascota --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Mascota</label>
+                                    <select name="mascota_id" class="form-select" required>
+                                        <option value="" selected disabled>-- Selecciona una Mascota --</option>
+                                        @foreach($mascotas as $mascota)
+                                            <option value="{{ $mascota->id }}" {{ old('mascota_id') == $mascota->id ? 'selected' : '' }}>
+                                                {{ $mascota->nombre }} ({{ $mascota->especie }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Selector de Servicio --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Servicio</label>
+                                    <select name="servicio_id" id="servicio_id" class="form-select" required>
+                                        <option value="" selected disabled>-- Selecciona un Servicio --</option>
+                                        @foreach($servicios as $servicio)
+                                            <option 
+                                                value="{{ $servicio->id }}" 
+                                                data-price="{{ $servicio->precio }}"
+                                                {{ old('servicio_id') == $servicio->id ? 'selected' : '' }}
+                                            >
+                                                {{ $servicio->nombre }} - ${{ number_format($servicio->precio, 2) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Resumen de Precio --}}
+                                <div class="mb-3 p-3 bg-light rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Precio del Servicio:</span>
+                                        <strong id="service-price">$0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="fw-bold">Total:</span>
+                                        <strong id="total-price" class="text-primary">$0.00</strong>
+                                    </div>
+                                </div>
+
+                                {{-- Motivo de la Consulta --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Motivo de la Consulta</label>
+                                    <textarea name="motivo" class="form-control" rows="3" placeholder="Describe brevemente el motivo de la consulta...">{{ old('motivo') }}</textarea>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- COLUMNA DERECHA: RESUMEN DE PAGO (SOLO CLIENTES) --}}
-                        @if(Auth::user()->isCliente())
-                            <div class="col-md-4">
-                                <div class="card bg-light border-0 shadow-sm">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Resumen de Pago</h5>
-                                        <hr>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Servicio Base</span>
-                                            {{-- El ID es usado por cita-form-manager.js --}}
-                                            <strong id="service-price">$0.00</strong>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Impuestos</span><span class="text-muted">$0.00</span></div>
-                                        <hr>
-                                        <div class="d-flex justify-content-between mb-4"><strong class="fs-5">Total a Pagar</strong><strong class="fs-5 text-primary" id="total-price">$0.00</strong></div>
-
-                                        <div class="d-grid gap-2">
-                                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-credit-card-2-front"></i> Pagar y Reservar</button>
-                                            <a href="{{ route('citas.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                                        </div>
-                                        <div class="mt-3 text-center text-muted" style="font-size: 0.8rem;"><i class="bi bi-shield-lock"></i> Pago seguro con Stripe</div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </form>
+                        {{-- BOTÓN DE ENVÍO --}}
+                        <div class="mt-4 text-end">
+                            <a href="{{ route('citas.index') }}" class="btn btn-light me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Agendar Cita</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
     </div>

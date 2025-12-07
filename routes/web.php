@@ -43,43 +43,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // --- Mascotas ---
-    // Ruta específica antes del resource
     Route::get('/veterinario/mascotas', [MascotaController::class, 'indexVeterinario'])
         ->name('veterinario.mascotas.index')
         ->middleware('role:veterinario');
         
     Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
 
-
     // --- CITAS (Lógica de Negocio) ---
-    // 1. Rutas específicas de citas (SIEMPRE ANTES DEL RESOURCE)
+    // 1. API Horarios (NUEVA - Antes del resource)
+    Route::get('/api/horarios-disponibles', [CitaController::class, 'obtenerHorarios'])->name('api.horarios');
+    
+    // 2. Rutas específicas
     Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');
     Route::patch('/citas/{cita}/cancelar', [CitaController::class, 'cancelar'])->name('citas.cancelar');
     
-    // 2. CRUD completo de citas
+    // 3. CRUD completo
     Route::resource('citas', CitaController::class);
 
-
-    // --- AGENDA (Solo Visualización) ---
-    // Solo necesitamos el index para ver el calendario y alimentar el JSON
+    // --- AGENDA (Visualización) ---
+    Route::get('/agenda/data', [AgendaController::class, 'getEvents'])->name('agenda.data');
     Route::get('/agenda', [AgendaController::class, 'index'])
         ->name('agenda.index')
         ->middleware('role:admin,veterinario');
 
+    // --- TAREAS INTERNAS ---
+    // (Borré la línea duplicada que tenías con ->only)
+    Route::resource('tareas', TareaController::class);
+
+    // --- LOGS (Auditoría) ---
+    // (Quitamos middleware role:admin si decidiste que todos vean sus logs, si no, déjalo)
+    Route::get('/logs', [LogsController::class, 'index'])->name('logs.index');
 
     // --- Otros Módulos ---
     Route::resource('tratamientos', TratamientoController::class);
     Route::resource('historial', HistorialMedicoController::class);
-    Route::resource('users', UserController::class)->middleware('role:admin');
     
-    Route::resource('disponibilidad', DisponibilidadController::class)->middleware('role:admin,veterinario');
-    Route::resource('medicamentos', MedicamentoController::class)->middleware('role:admin,veterinario');
-    Route::resource('servicios', ServicioController::class)->middleware('role:admin');
-    Route::resource('tareas', TareaController::class)->only(['store', 'update', 'destroy']);
+    // --- Solo Admin/Veterinario ---
+    Route::middleware('role:admin,veterinario')->group(function() {
+        Route::resource('disponibilidad', DisponibilidadController::class);
+        Route::resource('medicamentos', MedicamentoController::class);
+    });
 
-    Route::get('/agenda/data', [AgendaController::class, 'getEvents'])->name('agenda.data');
-    Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
-    Route::resource('tareas', TareaController::class);
-    Route::get('/logs', [LogsController::class, 'index'])->name('logs.index')->middleware('role:admin');
-    
+    // --- Solo Admin ---
+    Route::middleware('role:admin')->group(function() {
+        Route::resource('users', UserController::class);
+        Route::resource('servicios', ServicioController::class);
+    });
+
 });

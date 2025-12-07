@@ -7,7 +7,8 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/citas.js'])
 </head>
 <body class="font-sans antialiased">
     <div class="panel-container">     
@@ -16,67 +17,56 @@
         <main class="panel-main">
             <header class="panel-header">
                 <div class="header-title">
-                    <h3>Editar / Reprogramar Cita</h3>
-                    <p>Modifica los datos de la consulta para <strong>{{ $cita->mascota->nombre }}</strong>.</p>
+                    <h3>Editar Cita</h3>
+                    <p>Modifica los detalles de la consulta.</p>
                 </div>
             </header>
 
             <div class="panel-content">
-                <div class="card">
+                <div class="card shadow-sm border-0 p-4" style="max-width: 800px; margin: 0 auto;">
                     <form action="{{ route('citas.update', $cita) }}" method="POST">
                         @csrf
-                        @method('PATCH')
+                        @method('PUT')
+                        
+                        <div class="row">
+                            <div class="col-md-6 pe-md-4">
+                                <h5 class="mb-4 border-bottom pb-2">Detalles de la Cita</h5>
 
-                        <div class="card-body">
-                            @if ($errors->any())
-                                <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
-                            @endif
-
-                            <div class="row">
-                                {{-- Fecha y Hora --}}
-                                <div class="col-md-6 mb-3">
-                                    <label for="fecha_hora" class="form-label">Fecha y Hora</label>
-                                    {{-- IMPORTANTE: El formato para datetime-local debe ser Y-m-d\TH:i --}}
-                                    <input type="datetime-local" name="fecha_hora" id="fecha_hora" class="form-control" 
-                                           value="{{ old('fecha_hora', \Carbon\Carbon::parse($cita->fecha_hora)->format('Y-m-d\TH:i')) }}" required>
+                                {{-- Selector de Veterinario --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Veterinario</label>
+                                    <select name="veterinario_id" id="veterinario_id" class="form-select" required>
+                                        <option value="" selected disabled>-- Selecciona un Doctor --</option>
+                                        @foreach($veterinarios as $vet)
+                                            <option value="{{ $vet->id }}" 
+                                                {{ $cita->veterinario_id == $vet->id ? 'selected' : '' }}>
+                                                Dr. {{ $vet->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
-                                {{-- Motivo --}}
-                                <div class="col-md-6 mb-3">
-                                    <label for="motivo" class="form-label">Motivo</label>
-                                    <input type="text" name="motivo" id="motivo" class="form-control" value="{{ old('motivo', $cita->motivo) }}" required>
+                                {{-- Selector de Fecha --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fecha de la Cita</label>
+                                    <input type="date" id="fecha_selector" class="form-control" 
+                                           min="{{ date('Y-m-d') }}" 
+                                           value="{{ $cita->fecha_hora ? \Carbon\Carbon::parse($cita->fecha_hora)->format('Y-m-d') : '' }}" 
+                                           required>
+                                    <small class="text-muted">Selecciona un veterinario y una fecha para ver horas disponibles.</small>
                                 </div>
 
-                                {{-- Estado (SOLO ADMIN Y VETERINARIO) --}}
-                                @if(Auth::user()->isAdmin() || Auth::user()->isVeterinario())
-                                    <div class="col-md-6 mb-3">
-                                        <label for="estado" class="form-label">Estado de la Cita</label>
-                                        <select name="estado" id="estado" class="form-select">
-                                            <option value="pendiente" @selected(old('estado', $cita->estado) == 'pendiente')>Pendiente</option>
-                                            <option value="confirmada" @selected(old('estado', $cita->estado) == 'confirmada')>Confirmada</option>
-                                            <option value="completada" @selected(old('estado', $cita->estado) == 'completada')>Completada (Atendida)</option>
-                                            <option value="cancelada" @selected(old('estado', $cita->estado) == 'cancelada')>Cancelada</option>
-                                        </select>
+                                {{-- Contenedor de Huecos (Slots) --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Horarios Disponibles</label>
+                                    <div id="slots-container" class="d-flex flex-wrap gap-2 p-3 border rounded bg-light" style="min-height: 80px;">
+                                        <span class="text-muted fst-italic">Esperando datos...</span>
                                     </div>
-                                @endif
-
-                                {{-- Veterinario (Informativo, difícil de cambiar por disponibilidad, mejor solo lectura) --}}
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Veterinario Asignado</label>
-                                    <input type="text" class="form-control" value="Dr. {{ $cita->veterinario->name }}" disabled>
-                                    <small class="text-muted">Para cambiar de doctor, es mejor cancelar y crear una nueva cita.</small>
+                                    
+                                    {{-- INPUT OCULTO: Aquí se guardará la fecha y hora final para enviar al backend --}}
+                                    <input type="hidden" name="fecha_hora" id="fecha_hora_final" 
+                                           value="{{ $cita->fecha_hora }}" required>
+                                    @error('fecha_hora')
+                                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="card-footer text-end">
-                            <a href="{{ route('citas.index') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </main>
-    </div>
-</body>
-</html>

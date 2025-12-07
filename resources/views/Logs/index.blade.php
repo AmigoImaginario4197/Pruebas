@@ -9,11 +9,11 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
-    {{-- Cargamos el CSS externo --}}
+    {{-- Tus estilos --}}
+    <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
     <link rel="stylesheet" href="{{ asset('css/logs.css') }}">
     
-    {{-- Cargamos JS Global y el JS específico de Logs --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/logs.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
     <div class="panel-container">
@@ -26,18 +26,32 @@
                     <h3>Registro de Actividad</h3>
                     <p>Historial de acciones realizadas en el sistema.</p>
                 </div>
+                
+                {{-- Filtro de usuarios (Solo Admin) --}}
+                <div class="header-actions">
+                    @if(Auth::user()->isAdmin())
+                        <form action="{{ route('logs.index') }}" method="GET">
+                            <select name="user_id" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer;">
+                                <option value="">Todos los Usuarios</option>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>
+                                        {{ $u->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @endif
+                </div>
             </header>
 
             <div class="panel-content">
-                
                 <div class="item-list">
                     @forelse ($logs as $log)
-                        {{-- Lógica de colores (PHP) --}}
+                        {{-- Lógica de colores --}}
                         @php
                             $color = '#6c757d'; 
                             $icon = 'bi-hdd-stack';
                             $txt = strtolower($log->accion);
-                            
                             if(str_contains($txt, 'cre')) { $color = '#198754'; $icon = 'bi-plus-lg'; }
                             if(str_contains($txt, 'elimin')) { $color = '#dc3545'; $icon = 'bi-trash'; }
                             if(str_contains($txt, 'edit') || str_contains($txt, 'actualiz')) { $color = '#ffc107'; $icon = 'bi-pencil'; }
@@ -45,31 +59,26 @@
                         @endphp
 
                         <div class="item-card">
-                            {{-- Pasamos el color como Variable CSS --}}
+                            {{-- Icono de color --}}
                             <div class="log-icon-placeholder me-3" style="--log-color: {{ $color }};">
                                 <i class="bi {{ $icon }}"></i>
                             </div>
                             
+                            {{-- Detalles completos (Sin botón, sin modal) --}}
                             <div class="item-details">
-                                <h4>{{ $log->accion }}</h4>
-                                <p class="mb-1">
-                                    <strong>{{ $log->user->name ?? 'Sistema' }}</strong>
-                                    <span class="text-muted mx-1">|</span>
-                                    <span class="text-muted small">{{ $log->fecha->format('d/m/Y H:i') }}</span>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h4 class="mb-0">{{ $log->accion }}</h4>
+                                    <small class="text-muted">{{ $log->fecha->format('d/m/Y H:i') }}</small>
+                                </div>
+                                
+                                <p class="mb-1 text-primary fw-medium" style="font-size: 0.9rem;">
+                                    <i class="bi bi-person"></i> {{ $log->user->name ?? 'Sistema' }}
                                 </p>
-                                <small class="text-muted text-truncate-multiline">{{ $log->detalle }}</small>
-                            </div>
-
-                            <div class="item-actions">
-                                {{-- Botón Ver --}}
-                                <button type="button" class="btn btn-secondary" 
-                                    data-accion="{{ $log->accion }}"
-                                    data-usuario="{{ $log->user->name ?? 'Usuario Eliminado' }}"
-                                    data-fecha="{{ $log->fecha->format('d/m/Y H:i:s') }}"
-                                    data-detalle="{{ $log->detalle }}"
-                                    onclick="openLogModal(this)">
-                                    <i class="bi bi-eye"></i> Ver
-                                </button>
+                                
+                                {{-- Detalle completo visible --}}
+                                <p class="mb-0 text-muted small text-break">
+                                    {{ $log->detalle }}
+                                </p>
                             </div>
                         </div>
                     @empty
@@ -80,50 +89,9 @@
                     @endforelse
                 </div>
 
-                {{-- Paginación --}}
-                <div class="mt-4">
-                    {{ $logs->links() }}
-                </div>
+                <div class="mt-4">{{ $logs->links() }}</div>
             </div>
         </main>
-    </div>
-
-    {{-- MODAL DE DETALLES --}}
-    <div class="modal fade" id="logModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Detalles del Evento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                            <i class="bi bi-clock-history fs-2 text-secondary"></i>
-                        </div>
-                    </div>
-                    <ul class="list-group list-group-flush mb-3">
-                        <li class="list-group-item d-flex justify-content-between">
-                            <strong>Acción:</strong> <span id="modalAccion" class="text-primary fw-bold"></span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <strong>Usuario:</strong> <span id="modalUsuario"></span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <strong>Fecha:</strong> <span id="modalFecha"></span>
-                        </li>
-                    </ul>
-                    
-                    <p class="mb-1 px-2"><strong>Detalle Completo:</strong></p>
-                    <div class="p-3 bg-light rounded border mx-2">
-                        <span id="modalDetalle" style="word-break: break-word;"></span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 </html>
