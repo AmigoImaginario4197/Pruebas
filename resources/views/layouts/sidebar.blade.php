@@ -64,6 +64,12 @@
                         <i class="bi bi-calendar-event"></i> Agenda 
                     </a>
                 </li>
+               
+                <li>
+                    <a href="{{ route('tareas.index') }}" class="{{ request()->routeIs('tareas.*') ? 'active' : '' }}">
+                        <i class="bi bi-clipboard-check"></i> Tareas Internas
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('disponibilidad.index') }}" class="{{ request()->routeIs('disponibilidad.*') ? 'active' : '' }}">
                         <i class="bi bi-clock-fill"></i> Disponibilidad
@@ -76,7 +82,7 @@
                 </li>
             @endif
 
-            {{-- === PANEL DE ADMINISTRACIÓN (SOLO ADMIN) === --}}
+            {{-- === PANEL ADMIN === --}}
             @if(Auth::user()->isAdmin())
                 <li>
                     <a href="{{ route('servicios.index') }}" class="{{ request()->routeIs('servicios.*') ? 'active' : '' }}">
@@ -89,11 +95,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#"><i class="bi bi-list-check"></i> Logs</a>
+                    <a href="{{ route('logs.index') }}" class="{{ request()->routeIs('logs.index') ? 'active' : '' }}">
+                        <i class="bi bi-list-check"></i> Logs
+                    </a>
                 </li>
             @endif
 
-            {{-- === SALIR (UNIVERSAL) === --}}
+            {{-- === SALIR === --}}
             <li>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

@@ -4,95 +4,92 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
+import * as bootstrap from 'bootstrap';
 
 document.addEventListener('DOMContentLoaded', function() {
     let calendarEl = document.getElementById('calendar');
-
-    // Verificamos si existe el elemento para no causar errores en otras páginas
     if (!calendarEl) return;
 
-    // Obtenemos la ruta desde el HTML
     let routeUrl = calendarEl.getAttribute('data-route');
 
     let calendar = new Calendar(calendarEl, {
         plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
         initialView: 'dayGridMonth',
         locale: esLocale,
+        height: 'auto',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listWeek'
+            right: 'dayGridMonth,timeGridWeek'
         },
-        buttonText: {
-            today:    'Hoy',
-            month:    'Mes',
-            week:     'Semana',
-            day:      'Día',
-            list:     'Lista'
-        },
-        
-        // Carga de eventos AJAX
         events: routeUrl,
-        
-        // Configuración visual
-        navLinks: true, // permite dar clic en los días/semanas
-        editable: false, // pon true si quieres arrastrar (requiere backend extra)
-        dayMaxEvents: true, // permite enlace "ver más" si hay muchas citas
+        slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
 
-        // Formato de hora (24h)
-        slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        },
-        eventTimeFormat: { 
-            hour: '2-digit',
-            minute: '2-digit',
-            meridiem: false
-        },
-
-        // --- AL DAR CLIC EN UNA CITA (ABRIR MODAL) ---
         eventClick: function(info) {
-            // Evitamos que el navegador siga el link si hubiera
-            info.jsEvent.preventDefault(); 
-
+            info.jsEvent.preventDefault();
             let props = info.event.extendedProps;
             
-            // 1. Llenar datos en el HTML del Modal
-            document.getElementById('modalTitulo').innerText = info.event.title;
-            document.getElementById('modalCliente').innerText = props.cliente;
-            document.getElementById('modalMotivo').innerText = props.motivo;
-
-            // Formatear la fecha bonito
-            let fechaObj = info.event.start;
-            let opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('modalFecha').innerText = fechaObj.toLocaleDateString('es-ES', opcionesFecha);
-
-            // 2. Configurar el Badge de Estado
-            let badge = document.getElementById('modalEstadoBadge');
-            badge.innerText = props.estado.toUpperCase();
+            // Llenar datos básicos del modal
+            document.getElementById('modalTitle').innerText = info.event.title;
             
-            // Limpiar clases anteriores y poner color según estado
-            badge.className = 'badge'; // Reset
-            if (props.estado === 'confirmada') {
-                badge.classList.add('bg-success');
-            } else if (props.estado === 'pendiente') {
-                badge.classList.add('bg-warning', 'text-dark');
+            let start = info.event.start ? info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            let end = info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            document.getElementById('modalTime').innerText = `${info.event.start.toLocaleDateString()} | ${start} - ${end}`;
+
+            let modalResponsible = document.getElementById('modalResponsible');
+            let modalDescription = document.getElementById('modalDescription');
+            let modalActions = document.getElementById('modalActions');
+            
+            modalActions.innerHTML = ''; 
+
+            if (props.type === 'appointment') {
+                // --- CITA ---
+                modalResponsible.innerText = `Cliente: ${props.client} | Estado: ${props.status.toUpperCase()}`;
+                modalDescription.innerText = props.reason || 'Sin motivo';
+
+                if (props.can_edit) {
+                    modalActions.innerHTML = `
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        <a href="${props.edit_url}" class="btn btn-primary">Gestionar Cita</a>
+                    `;
+                } else {
+                    modalActions.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>`;
+                }
+
             } else {
-                badge.classList.add('bg-secondary');
+                // --- TAREA INTERNA ---
+                modalResponsible.innerText = `Creado por: ${props.created_by}`;
+                modalDescription.innerText = props.notes || 'Sin notas';
+
+                // Si es ADMIN (can_edit = true), puede editar/borrar
+                if (props.can_edit) {
+                    let deleteUrl = `/tareas/${props.source_id}`;
+                    let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    modalActions.innerHTML = `
+                        <a href="${props.edit_url}" class="btn btn-primary me-2">Editar</a>
+                        
+                        <form action="${deleteUrl}" method="POST" onsubmit="return confirm('¿Borrar tarea?');" style="display:inline;">
+                            <input type="hidden" name="_token" value="${csrfToken}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    `;
+                } else {
+                    // Si es VETERINARIO (can_edit = false), solo puede VER
+                    // Asumimos ruta: /tareas/{id}
+                    let showUrl = `/tareas/${props.source_id}`;
+                    modalActions.innerHTML = `
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        <a href="${showUrl}" class="btn btn-info text-white">Ver Detalles</a>
+                    `;
+                }
             }
 
-            // 3. Configurar botón "Ir a detalle"
-            let btnEditar = document.getElementById('btnEditarCita');
-            if(btnEditar) {
-                // Asumiendo ruta Laravel: /citas/{id}
-                btnEditar.href = `/citas/${info.event.id}`;
-            }
-
-            // 4. Mostrar el Modal usando Bootstrap (Global)
-            let modalElement = document.getElementById('citaModal');
-            let modalInstance = new window.bootstrap.Modal(modalElement);
-            modalInstance.show();
+            let modalEl = document.getElementById('eventDetailModal');
+            let modal = new bootstrap.Modal(modalEl);
+            modal.show();
         }
     });
 

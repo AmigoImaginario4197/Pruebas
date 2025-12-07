@@ -4,76 +4,101 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cita;
-use App\Models\Tarea; 
+use App\Models\Tarea;
+use Illuminate\Support\Facades\Auth;
 
 class AgendaController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Muestra la vista principal del calendario.
+     */
+    public function index()
     {
-        if ($request->ajax()) {
-            $eventos = [];
+        return view('agenda.index');
+    }
 
-            // 1. CARGAR CITAS
+    /**
+     * Devuelve los eventos en JSON para FullCalendar.
+     */
+    public function getEvents()
+    {
+        $events = [];
+        
+        /** @var \App\Models\User $user */
+        $user = Auth::user(); // El comentario de arriba quita el rojo en isAdmin()
+        
+        $isAdmin = $user->isAdmin(); 
 
-            $citas = Cita::with(['mascota', 'user'])
-                         ->where('estado', '!=', 'cancelada')
-                         ->get();
+        // ==========================================
+        // 1. CITAS MÉDICAS
+        // ==========================================
+        $appointments = Cita::with(['mascota', 'cliente'])
+                            ->where('estado', '!=', 'cancelada')
+                            ->get();
 
-            foreach ($citas as $cita) {
-                // Lógica de colores según estado
-                $color = match ($cita->estado) {
-                    'pendiente' => '#ffc107',  // Amarillo
-                    'confirmada' => '#198754', // Verde
-                    'completada' => '#6c757d', // Gris
-                    default => '#3788d8',      // Azul
-                };
+        foreach ($appointments as $appointment) {
+            $color = match ($appointment->estado) {
+                'confirmada' => '#198754', // Verde
+                default      => '#ffc107', // Amarillo
+            };
+            
+            $textColor = $appointment->estado === 'confirmada' ? '#ffffff' : '#000000';
+            
+            // Admin puede editar todo.
+            // Opcional: Veterinario podría editar sus propias citas si agregas esa lógica
+            $canEdit = $isAdmin; 
 
-                $eventos[] = [
-                    // Prefijo 'cita_' para que no se confunda con las tareas si tienen el mismo ID
-                    'id'    => 'cita_' . $cita->id, 
-                    'title' => '🐾 ' . $cita->mascota->nombre . ' - ' . $cita->motivo,
-                    'start' => $cita->fecha_hora_inicio,
-                    'end'   => $cita->fecha_hora_fin,
-                    'backgroundColor' => $color,
-                    'borderColor' => $color,
-                    'textColor' => $cita->estado === 'pendiente' ? '#000000' : '#ffffff',
-                    // Datos extra para que el JS sepa qué modal abrir
-                    'extendedProps' => [
-                        'tipo'    => 'cita', 
-                        'real_id' => $cita->id,
-                        'cliente' => $cita->user->name ?? 'Cliente',
-                        'estado'  => $cita->estado,
-                        'motivo'  => $cita->motivo
-                    ]
-                ];
-            }
-
-
-            // 2. CARGAR TAREAS INTERNAS (De la tabla 'tareas')
-
-            $tareas = Tarea::with('user')->get();
-
-            foreach ($tareas as $tarea) {
-                $eventos[] = [
-                    'id'    => 'tarea_' . $tarea->id,
-                    'title' => '📋 ' . $tarea->titulo, 
-                    'start' => $tarea->inicio,        
-                    'end'   => $tarea->fin,           
-                    'backgroundColor' => $tarea->color ?? '#6c757d', 
-                    'borderColor' => $tarea->color ?? '#6c757d',
-                    'textColor' => '#ffffff',
-                    'extendedProps' => [
-                        'tipo'    => 'tarea',
-                        'real_id' => $tarea->id,
-                        'creado_por' => $tarea->user->name ?? 'Sistema',
-                        'observaciones' => $tarea->observaciones
-                    ]
-                ];
-            }
-
-            return response()->json($eventos);
+            $events[] = [
+                'id'    => 'appointment_' . $appointment->id,
+                'title' => '🐾 ' . $appointment->mascota->nombre,
+                'start' => \Carbon\Carbon::parse($appointment->fecha_hora_inicio)->toIso8601String(),
+                'end'   => \Carbon\Carbon::parse($appointment->fecha_hora_fin)->toIso8601String(),
+                'backgroundColor' => $color,
+                'borderColor' => $color,
+                'textColor' => $textColor,
+                'extendedProps' => [
+                    'type'        => 'appointment',
+                    'client'      => $appointment->cliente->name ?? 'N/A',
+                    'reason'      => $appointment->motivo,
+                    'status'      => $appointment->estado,
+                    'edit_url'    => route('citas.edit', $appointment->id),
+                    'can_edit'    => $canEdit,
+                    'source_id'   => $appointment->id
+                ]
+            ];
         }
 
-        return view('agenda.index');
+        // ==========================================
+        // 2. TAREAS INTERNAS
+        // ==========================================
+        $tasks = Tarea::with('user')->get();
+
+        foreach ($tasks as $task) {
+            $color = '#6c757d'; // Gris
+            
+            // REGLA DE ORO: Solo Admin puede editar/borrar tareas.
+            // El veterinario solo las ve.
+            $canEdit = $isAdmin;
+
+            $events[] = [
+                'id'    => 'task_' . $task->id,
+                'title' => '📋 ' . $task->titulo, 
+                'start' => \Carbon\Carbon::parse($task->inicio)->toIso8601String(), 
+                'end'   => \Carbon\Carbon::parse($task->fin)->toIso8601String(),    
+                'backgroundColor' => $color, 
+                'borderColor' => $color,
+                'textColor' => '#ffffff',
+                'extendedProps' => [
+                    'type'        => 'task',
+                    'created_by'  => $task->user->name ?? 'Sistema',
+                    'notes'       => $task->observaciones,
+                    'source_id'   => $task->id,
+                    'can_edit'    => $canEdit,
+                    'edit_url'    => route('tareas.edit', $task->id) // Necesario para el botón de editar
+                ]
+            ];
+        }
+
+        return response()->json($events);
     }
 }

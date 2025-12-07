@@ -10,6 +10,8 @@ import './cita-form-manager.js';
 
 import './agenda.js';
 
+import './logs.js';
+
 window.bootstrap = bootstrap;
 
 window.Alpine = Alpine;

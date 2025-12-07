@@ -13,6 +13,7 @@ use App\Http\Controllers\DisponibilidadController;
 use App\Http\Controllers\MedicamentoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\TareaController;
+use App\Http\Controllers\LogsController;
 
 // ========== RUTAS PÚBLICAS ==========
 Route::get('/', function () { return view('home'); })->name('home');
@@ -76,4 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('servicios', ServicioController::class)->middleware('role:admin');
     Route::resource('tareas', TareaController::class)->only(['store', 'update', 'destroy']);
 
+    Route::get('/agenda/data', [AgendaController::class, 'getEvents'])->name('agenda.data');
+    Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+    Route::resource('tareas', TareaController::class);
+    Route::get('/logs', [LogsController::class, 'index'])->name('logs.index')->middleware('role:admin');
+    
 });

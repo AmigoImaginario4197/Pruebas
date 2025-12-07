@@ -4,102 +4,142 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda - Pet Care</title>
+    
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/agenda.js'])
+
+    <style>
+        #calendar {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            height: calc(100vh - 180px); 
+            min-height: 600px;
+        }
+        .fc-toolbar-title { font-size: 1.2rem !important; color: #333; }
+        .fc-button { font-size: 0.85rem !important; }
+        .fc-event { cursor: pointer; border: none; }
+    </style>
 </head>
 <body class="font-sans antialiased">
     <div class="panel-container">
+        
         @include('layouts.sidebar')
 
         <main class="panel-main">
             <header class="panel-header">
                 <div class="header-title">
-                    <h3>Agenda Diaria</h3>
-                    <p>Visualiza tus citas y eventos del día.</p>
+                    <h3>Agenda Veterinaria</h3>
                 </div>
+                
                 @if(!Auth::user()->isCliente())
-                    <div class="header-actions">
-<a href="{{ route('citas.create') }}" class="btn btn-primary">
-    <i class="bi bi-calendar-plus"></i> Nueva Cita
-</a>                            <i class="bi bi-plus-circle"></i> Nuevo Evento
+                    <div class="header-actions d-flex gap-2">
+                        {{-- Botón Tarea: ID del target actualizado a createTaskModal --}}
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                            <i class="bi bi-clipboard-plus"></i> Tarea Interna
+                        </button>
+                        <a href="{{ route('citas.create') }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-calendar-plus"></i> Nueva Cita
                         </a>
                     </div>
                 @endif
             </header>
 
-            <div class="panel-content">
+            <div class="panel-content" style="overflow-y: hidden;"> 
                 @if (session('success'))
-                    <div class="alert alert-success mb-4">{{ session('success') }}</div>
+                    <div class="alert alert-success py-2 mb-2">{{ session('success') }}</div>
                 @endif
 
-                {{-- Selector de Fecha --}}
-                <div class="card p-3 mb-4">
-                    <form action="{{ route('agenda.index') }}" method="GET" class="d-flex align-items-center gap-3">
-                        <label for="fecha" class="form-label mb-0 fw-bold">Ver fecha:</label>
-                        <input type="date" name="fecha" id="fecha" class="form-control w-auto" value="{{ $fecha }}" onchange="this.form.submit()">
-                        <a href="{{ route('agenda.index') }}" class="btn btn-outline-secondary btn-sm">Hoy</a>
-                    </form>
+                {{-- Leyenda con tu diseño original y colores correctos --}}
+                <div class="d-flex gap-3 mb-2 align-items-center small text-muted">
+                    <span><i class="bi bi-circle-fill text-warning"></i> Pendiente</span>
+                    <span><i class="bi bi-circle-fill text-success"></i> Confirmada</span>
+                    <span><i class="bi bi-circle-fill text-secondary"></i> Tarea Interna</span>
                 </div>
 
-                <h4 class="mb-3">Eventos para el {{ \Carbon\Carbon::parse($fecha)->isoFormat('dddd, D [de] MMMM') }}</h4>
+                {{-- CALENDARIO: Apuntando a la ruta 'agenda.data' --}}
+                <div id="calendar" data-route="{{ route('agenda.data') }}"></div>
 
-                <div class="item-list">
-                    {{-- 1. MOSTRAR CITAS (Vienen de la tabla 'citas') --}}
-                    @foreach ($citas as $cita)
-                        <div class="item-card border-start border-4 border-primary">
-                            <div class="item-photo-placeholder bg-primary text-white">
-                                <i class="bi bi-people-fill"></i>
-                            </div>
-                            <div class="item-details">
-                                <h4>{{ \Carbon\Carbon::parse($cita->fecha_hora)->format('H:i') }} - Cita: {{ $cita->mascota->nombre }}</h4>
-                                <p class="mb-0 text-muted">
-                                    {{ $cita->motivo }} - 
-                                    @if(Auth::user()->isCliente()) Dr. {{ $cita->veterinario->name }}
-                                    @else Cliente: {{ $cita->cliente->name }} @endif
-                                </p>
-                            </div>
-                            <div class="item-actions">
-                                <a href="{{ route('citas.show', $cita) }}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
-                            </div>
-                        </div>
-                    @endforeach
-
-                    {{-- 2. MOSTRAR EVENTOS DE AGENDA (Solo personal, tabla 'agenda') --}}
-                    @if(isset($eventos))
-                        @foreach ($eventos as $evento)
-                            <div class="item-card border-start border-4 border-warning">
-                                <div class="item-photo-placeholder bg-warning text-dark">
-                                    <i class="bi bi-calendar-event"></i>
-                                </div>
-                                <div class="item-details">
-                                    <h4>{{ \Carbon\Carbon::parse($evento->hora_inicio)->format('H:i') }} - {{ $evento->actividad }}</h4>
-                                    <p class="mb-0 text-muted">
-                                        @if($evento->hora_fin) Hasta: {{ \Carbon\Carbon::parse($evento->hora_fin)->format('H:i') }} @endif
-                                        @if($evento->mascota) | Mascota: {{ $evento->mascota->nombre }} @endif
-                                    </p>
-                                </div>
-                                <div class="item-actions">
-                                    <a href="{{ route('agenda.show', $evento) }}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
-                                    <a href="{{ route('agenda.edit', $evento) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></a>
-                                    <form action="{{ route('agenda.destroy', $evento) }}" method="POST" onsubmit="return confirm('¿Borrar evento?');">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    @if($citas->isEmpty() && (empty($eventos) || $eventos->isEmpty()))
-                        <div class="empty-state-card">
-                            <i class="bi bi-calendar4-week"></i>
-                            <p>No hay actividades programadas para este día.</p>
-                        </div>
-                    @endif
-                </div>
             </div>
         </main>
     </div>
+
+    {{-- =================================================================== --}}
+    {{-- MODAL 1: CREAR TAREA (ID actualizado: createTaskModal) --}}
+    {{-- =================================================================== --}}
+    @if(!Auth::user()->isCliente())
+    <div class="modal fade" id="createTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('tareas.store') }}" method="POST" class="modal-content">
+                @csrf
+                <div class="modal-header py-2">
+                    <h5 class="modal-title fw-bold">Nueva Tarea Interna</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" name="titulo" class="form-control" required placeholder="Ej: Reunión...">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Inicio</label>
+                            <input type="datetime-local" name="inicio" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Fin</label>
+                            <input type="datetime-local" name="fin" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                    </div>
+                    {{-- Color gris forzado (Hidden) --}}
+                    <input type="hidden" name="color" value="#6c757d">
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="submit" class="btn btn-secondary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- =================================================================== --}}
+    {{-- MODAL 2: VER DETALLES (ID actualizado: eventDetailModal) --}}
+    {{-- =================================================================== --}}
+    <div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Detalle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- IDs internos en inglés para coincidir con agenda.js --}}
+                    <h4 id="modalTitle" class="fw-bold mb-1">...</h4>
+                    <p id="modalTime" class="text-muted small mb-3">...</p>
+                    
+                    <div class="p-2 bg-light rounded mb-2">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Responsable / Cliente</small>
+                        <div id="modalResponsible" class="fw-medium">...</div>
+                    </div>
+                    <div class="p-2 border rounded">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Descripción</small>
+                        <div id="modalDescription">...</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0" id="modalActions">
+                    {{-- Botones inyectados por JS --}}
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

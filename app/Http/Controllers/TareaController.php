@@ -9,68 +9,107 @@ use Illuminate\Support\Facades\Auth;
 class TareaController extends Controller
 {
     /**
-     * Guarda una nueva tarea en la base de datos.
+     * VER LISTA: Admin y Veterinarios
+     */
+    public function index()
+    {
+        $tareas = Tarea::with('user')->orderBy('inicio', 'desc')->paginate(10);
+        return view('tareas.index', compact('tareas'));
+    }
+
+    /**
+     * VER DETALLE: Admin y Veterinarios
+     */
+    public function show(Tarea $tarea)
+    {
+        return view('tareas.show', compact('tarea'));
+    }
+
+    /**
+     * FORMULARIO CREAR: Solo Admin
+     */
+    public function create()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->isAdmin()) abort(403, 'No tienes permiso para crear tareas.');
+
+        return view('tareas.create');
+    }
+
+    /**
+     * GUARDAR: Solo Admin
      */
     public function store(Request $request)
     {
-        // 1. Validamos los datos que vienen del formulario
-        $validated = $request->validate([
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->isAdmin()) abort(403, 'No tienes permiso para crear tareas.');
+
+        $data = $request->validate([
             'titulo' => 'required|string|max:255',
             'inicio' => 'required|date',
-            'fin'    => 'required|date|after:inicio', // El fin debe ser después del inicio
-            'color'  => 'nullable|string|max:20',
+            'fin'    => 'required|date|after:inicio',
             'observaciones' => 'nullable|string',
+            'color'  => 'nullable|string'
         ]);
 
-        // 2. Creamos la tarea usando el Modelo
-        Tarea::create([
-            'user_id' => Auth::id(),
-            'titulo'  => $validated['titulo'],
-            'inicio'  => $validated['inicio'],
-            'fin'     => $validated['fin'],
-            'color'   => $validated['color'] ?? '#6c757d', // Gris si no eligen color
-            'observaciones' => $validated['observaciones'],
-        ]);
+        $data['user_id'] = $user->id;
+        $data['color'] = $data['color'] ?? '#6c757d';
 
-        // 3. Redirigimos a la agenda con mensaje de éxito
-        return redirect()->route('agenda.index')->with('success', 'Tarea interna agregada correctamente.');
-    }
+        Tarea::create($data);
 
-    /**
-     * Actualiza una tarea (Útil si implementas Drag & Drop luego).
-     */
-    public function update(Request $request, $id)
-    {
-        $tarea = Tarea::findOrFail($id);
-
-        // Validaciones simples
-        $request->validate([
-            'inicio' => 'required|date',
-            'fin'    => 'required|date',
-        ]);
-
-        $tarea->update([
-            'inicio' => $request->inicio,
-            'fin'    => $request->fin,
-           
-        ]);
-
-        if($request->ajax()) {
-            return response()->json(['status' => 'success']);
+        // Si viene del modal de la agenda, volvemos atrás
+        if(str_contains(url()->previous(), 'agenda')) {
+            return redirect()->back()->with('success', 'Tarea interna agregada.');
         }
-
-        return redirect()->route('agenda.index');
+        return redirect()->route('tareas.index')->with('success', 'Tarea creada correctamente.');
     }
 
     /**
-     * Elimina una tarea.
+     * FORMULARIO EDITAR: Solo Admin
      */
-    public function destroy($id)
+    public function edit(Tarea $tarea)
     {
-        $tarea = Tarea::findOrFail($id);
-        
-        $tarea->delete();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->isAdmin()) abort(403, 'No tienes permiso para editar tareas.');
 
-        return redirect()->route('agenda.index')->with('success', 'Tarea eliminada.');
+        return view('tareas.edit', compact('tarea'));
+    }
+
+    /**
+     * ACTUALIZAR: Solo Admin
+     */
+    public function update(Request $request, Tarea $tarea)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->isAdmin()) abort(403, 'No tienes permiso para editar tareas.');
+
+        $data = $request->validate([
+            'titulo' => 'required|string|max:255',
+            'inicio' => 'required|date',
+            'fin'    => 'required|date|after:inicio',
+            'observaciones' => 'nullable|string',
+            'color'  => 'nullable|string'
+        ]);
+
+        $tarea->update($data);
+
+        return redirect()->route('tareas.index')->with('success', 'Tarea actualizada.');
+    }
+
+    /**
+     * ELIMINAR: Solo Admin
+     */
+    public function destroy(Tarea $tarea)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->isAdmin()) abort(403, 'No tienes permiso para eliminar tareas.');
+
+        $tarea->delete();
+        return redirect()->back()->with('success', 'Tarea eliminada.');
     }
 }
