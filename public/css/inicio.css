@@ -1,0 +1,47 @@
+/* =========================================
+   ESTILOS PARA PÁGINAS PÚBLICAS
+   ========================================= */
+
+/* Título de sección con línea inferior */
+.section-title {
+    font-weight: 700;
+    color: #333;
+    position: relative;
+    padding-bottom: 15px;
+    margin-bottom: 40px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 60px;
+    height: 3px;
+    /* Usa el color primario de Bootstrap para consistencia */
+    background-color: var(--bs-primary, #0d6efd); 
+    bottom: 0;
+    /* Centrado perfecto */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Tarjetas de equipo para la página de presentación */
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* Acordeón de FAQs */
+.accordion-button:not(.collapsed) {
+    color: #0d6efd;
+    background-color: #e7f1ff;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Formulario de contacto */
+.contact-info-list li {
+    font-size: 1.1rem;
+}

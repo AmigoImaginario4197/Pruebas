@@ -1,0 +1,41 @@
+/* Contenedor general de los horarios */
+.slots-container {
+    display: grid;
+    /* Creamos una cuadrícula que se adapta: 4 columnas en PC, 3 en tablet... */
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.75rem; /* Espacio entre botones */
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa; /* Fondo gris claro */
+    border: 1px solid #dee2e6;
+    min-height: 100px;
+    align-content: flex-start; /* Alinea los botones arriba si hay espacio de sobra */
+}
+
+/* Estilo base de cada botón de hora */
+.slot-button {
+    background-color: #ffffff; /* Fondo blanco */
+    color: #495057; /* Texto gris oscuro */
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Efecto al pasar el ratón por encima */
+.slot-button:hover {
+    border-color: #0d6efd; /* Borde azul */
+    color: #0d6efd;
+}
+
+/* Estilo del botón SELECCIONADO */
+.slot-button.selected {
+    background-color: #0d6efd; /* Fondo azul primario de Bootstrap */
+    color: white;
+    border-color: #0d6efd;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3); /* Sombra suave azul */
+    transform: translateY(-2px); /* Pequeño efecto de "elevación" */
+}

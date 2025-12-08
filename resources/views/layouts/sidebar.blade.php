@@ -2,7 +2,7 @@
     <div class="sidebar-header">
         <img src="{{ asset('images/logo.png') }}" alt="Pet Care Logo" class="sidebar-logo">
     </div>
-    
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <nav class="sidebar-menu">
         <ul>
             {{-- === ENLACES COMUNES PARA TODOS === --}}
@@ -37,9 +37,19 @@
             <li>
                 <a href="{{ route('citas.index') }}" class="{{ request()->routeIs('citas.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-check"></i>
-                    {{ Auth::user()->isCliente() ? 'Mis Citas' : 'Agenda de Citas' }}
+                    {{ Auth::user()->isCliente() ? 'Mis Citas' : 'Gestión de Citas' }}
                 </a>
             </li>
+
+            {{-- AGENDA (NUEVO PARA CLIENTES) --}}
+            @if(Auth::user()->isCliente())
+            <li>
+                <a href="{{ route('agenda.index') }}" class="{{ request()->routeIs('agenda.index') ? 'active' : '' }}">
+                    <i class="bi bi-calendar3"></i> Mi Agenda
+                </a>
+            </li>
+            @endif
+
             {{-- Historial Médico (Solo personal clínico) --}}
             @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
                 <li>
@@ -49,7 +59,7 @@
                 </li>
             @endif
 
-            {{-- Tratamientos (Visible para todos, el texto cambia) --}}
+            {{-- Tratamientos (Visible para todos) --}}
             <li>
                 <a href="{{ route('tratamientos.index') }}" class="{{ request()->routeIs('tratamientos.*') ? 'active' : '' }}">
                     <i class="bi bi-prescription2"></i>
@@ -57,14 +67,22 @@
                 </a>
             </li>
 
+            {{-- MEDICAMENTOS (NUEVO PARA CLIENTES) --}}
+            @if(Auth::user()->isCliente())
+                <li>
+                    <a href="{{ route('medicamentos.index') }}" class="{{ request()->routeIs('medicamentos.*') ? 'active' : '' }}">
+                        <i class="bi bi-capsule-pill"></i> Catálogo de Medicamentos
+                    </a>
+                </li>
+            @endif
+
             {{-- === HERRAMIENTAS DE GESTIÓN INTERNA (SOLO PERSONAL) === --}}
             @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
                 <li>
                     <a href="{{ route('agenda.index') }}" class="{{ request()->routeIs('agenda.*') ? 'active' : '' }}">
-                        <i class="bi bi-calendar-event"></i> Agenda 
+                        <i class="bi bi-calendar-event"></i> Agenda General
                     </a>
                 </li>
-               
                 <li>
                     <a href="{{ route('tareas.index') }}" class="{{ request()->routeIs('tareas.*') ? 'active' : '' }}">
                         <i class="bi bi-clipboard-check"></i> Tareas Internas
@@ -77,7 +95,7 @@
                 </li>
                 <li>
                     <a href="{{ route('medicamentos.index') }}" class="{{ request()->routeIs('medicamentos.*') ? 'active' : '' }}">
-                        <i class="bi bi-capsule-pill"></i> Catálogo Medicamentos
+                        <i class="bi bi-capsule-pill"></i> Gestión de Medicamentos
                     </a>
                 </li>
             @endif
@@ -96,7 +114,16 @@
                 </li>
                 <li>
                     <a href="{{ route('logs.index') }}" class="{{ request()->routeIs('logs.index') ? 'active' : '' }}">
-                        <i class="bi bi-list-check"></i> Logs
+                        <i class="bi bi-list-check"></i> Logs del Sistema
+                    </a>
+                </li>
+            @endif
+
+            {{-- LOGS PARA CLIENTE (NUEVO) --}}
+            @if(Auth::user()->isCliente())
+                 <li>
+                    <a href="{{ route('logs.index') }}" class="{{ request()->routeIs('logs.index') ? 'active' : '' }}">
+                        <i class="bi bi-list-check"></i> Mi Actividad
                     </a>
                 </li>
             @endif
@@ -105,7 +132,7 @@
             <li>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
+                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" class="text-danger">
                         <i class="bi bi-box-arrow-right"></i> Salir
                     </a>
                 </form>
@@ -114,10 +141,3 @@
     </nav>
 </div>
 
-<style>
-    .sidebar-menu a.active {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-left-color: #7CF023; 
-        font-weight: 700;
-    }
-</style>

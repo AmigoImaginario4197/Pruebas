@@ -20,73 +20,64 @@ class CitaController extends Controller
     {
         $this->middleware('auth');
     }
+// Pega esta función dentro de tu CitaController.php
 
-    // --- API: OBTENER HUECOS LIBRES ---
-    public function obtenerHorarios(Request $request)
-    {
-        $request->validate([
-            'fecha' => 'required|date',
-            'veterinario_id' => 'required|exists:users,id',
-        ]);
+// En tu CitaController.php
 
-        $fecha = Carbon::parse($request->fecha);
-        $diaSemana = $fecha->dayOfWeek; // 0 (Domingo) a 6 (Sábado)
+public function obtenerHorarios(Request $request)
+{
+    $request->validate([
+        'fecha' => 'required|date_format:Y-m-d',
+        'veterinario_id' => 'required|exists:users,id',
+    ]);
 
-        // 1. Buscar horario de trabajo del veterinario
-        $horarioTrabajo = Disponibilidad::where('user_id', $request->veterinario_id)
-            ->where('dia_semana', $diaSemana)
-            ->first();
+    $fechaSeleccionada = $request->fecha;
 
-        if (!$horarioTrabajo) {
-            return response()->json(['mensaje' => 'El veterinario no trabaja este día.'], 404);
-        }
+    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+    // Buscamos por 'veterinario_id' en lugar de 'user_id'
+    $horarioTrabajo = \App\Models\Disponibilidad::where('veterinario_id', $request->veterinario_id)
+        ->where('fecha', $fechaSeleccionada)
+        ->first();
 
-        // 2. Obtener citas ya ocupadas ese día
-        // Nota: Como tus citas duran 1 hora (según tu store), debemos bloquear el rango completo
-        $citasOcupadas = Cita::where('veterinario_id', $request->veterinario_id)
-            ->whereDate('fecha_hora', $request->fecha)
-            ->where('estado', '!=', 'cancelada')
-            ->get(['fecha_hora']);
-
-        // 3. Generar slots cada 30 minutos
-        $intervalo = 30; 
-        $horaInicio = Carbon::parse($request->fecha . ' ' . $horarioTrabajo->hora_inicio);
-        $horaFin = Carbon::parse($request->fecha . ' ' . $horarioTrabajo->hora_fin);
-        
-        $slotsDisponibles = [];
-
-        while ($horaInicio->lessThan($horaFin)) {
-            // Verificamos si este slot choca con alguna cita existente
-            $esLibre = true;
-            $inicioSlot = $horaInicio->copy();
-            $finSlot = $horaInicio->copy()->addMinutes($intervalo); // El slot dura 30 min (o lo que dura tu cita)
-
-            foreach ($citasOcupadas as $cita) {
-                $inicioCita = Carbon::parse($cita->fecha_hora);
-                $finCita = $inicioCita->copy()->addHour(); // Tus citas duran 1 hora
-
-                // Si el slot solapa con una cita existente, no es libre
-                // (Si empieza dentro de una cita O si termina dentro de una cita)
-                if ($inicioSlot->greaterThanOrEqualTo($inicioCita) && $inicioSlot->lessThan($finCita)) {
-                    $esLibre = false;
-                    break;
-                }
-            }
-
-            // Solo agregar si es futuro (si es hoy, no mostrar horas pasadas)
-            if ($esLibre) {
-                if ($fecha->isToday() && $inicioSlot->lessThan(now())) {
-                    // Es una hora pasada de hoy, no agregar
-                } else {
-                    $slotsDisponibles[] = $inicioSlot->format('H:i');
-                }
-            }
-
-            $horaInicio->addMinutes($intervalo);
-        }
-
-        return response()->json($slotsDisponibles);
+    if (!$horarioTrabajo) {
+        return response()->json(['mensaje' => 'El veterinario no tiene disponibilidad registrada para este día.'], 404);
     }
+
+    // El resto de la lógica para buscar citas y generar slots se mantiene igual...
+    $citasOcupadas = Cita::where('veterinario_id', $request->veterinario_id)
+        ->whereDate('fecha_hora', $fechaSeleccionada)
+        ->where('estado', '!=', 'cancelada')
+        ->get(['fecha_hora']);
+
+    $intervalo = 30; 
+    $horaInicio = \Carbon\Carbon::parse($fechaSeleccionada . ' ' . $horarioTrabajo->hora_inicio);
+    $horaFin = \Carbon\Carbon::parse($fechaSeleccionada . ' ' . $horarioTrabajo->hora_fin);
+    
+    $slotsDisponibles = [];
+
+    while ($horaInicio->lessThan($horaFin)) {
+        $esLibre = true;
+        $inicioSlot = $horaInicio->copy();
+        
+        foreach ($citasOcupadas as $cita) {
+            $inicioCita = \Carbon\Carbon::parse($cita->fecha_hora);
+            $finCita = $inicioCita->copy()->addHour();
+
+            if ($inicioSlot->between($inicioCita, $finCita, false)) { 
+                $esLibre = false;
+                break;
+            }
+        }
+
+        if ($esLibre && $inicioSlot->isFuture()) {
+            $slotsDisponibles[] = $inicioSlot->format('H:i');
+        }
+
+        $horaInicio->addMinutes($intervalo);
+    }
+
+    return response()->json($slotsDisponibles);
+}
 
     public function index()
     {

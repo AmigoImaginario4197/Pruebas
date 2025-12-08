@@ -14,12 +14,16 @@ use App\Http\Controllers\MedicamentoController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\TareaController;
 use App\Http\Controllers\LogsController;
+use App\Http\Controllers\ContactoController;
 
 // ========== RUTAS PÚBLICAS ==========
 Route::get('/', function () { return view('home'); })->name('home');
 Route::get('/presentacion', function () { return view('presentacion'); })->name('presentacion');
 Route::get('/faqs', function () { return view('faqs'); })->name('faqs');
-Route::get('/contacto', function () { return view('contacto'); })->name('contacto');
+
+// Rutas de Contacto
+Route::get('/contacto', [ContactoController::class, 'show'])->name('contacto');
+Route::post('/contacto/enviar', [ContactoController::class, 'enviar'])->name('contacto.enviar');
 
 // Rutas legales
 Route::prefix('legal')->name('legal.')->group(function () {
@@ -27,7 +31,7 @@ Route::prefix('legal')->name('legal.')->group(function () {
     Route::get('/privacidad', function () { return view('politica-privacidad'); })->name('privacidad');
     Route::get('/cookies', function () { return view('politica-cookies'); })->name('politica-cookies');
 });
-
+Route::post('/contacto/enviar', [ContactoController::class, 'enviar'])->name('contacto.enviar');
 // ========== RUTAS DE AUTENTICACIÓN ==========
 require __DIR__.'/auth.php';
 
@@ -50,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
 
     // --- CITAS (Lógica de Negocio) ---
-    // 1. API Horarios (NUEVA - Antes del resource)
+    // 1. Horarios 
     Route::get('/api/horarios-disponibles', [CitaController::class, 'obtenerHorarios'])->name('api.horarios');
     
     // 2. Rutas específicas
@@ -67,11 +71,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:admin,veterinario');
 
     // --- TAREAS INTERNAS ---
-    // (Borré la línea duplicada que tenías con ->only)
     Route::resource('tareas', TareaController::class);
 
     // --- LOGS (Auditoría) ---
-    // (Quitamos middleware role:admin si decidiste que todos vean sus logs, si no, déjalo)
     Route::get('/logs', [LogsController::class, 'index'])->name('logs.index');
 
     // --- Otros Módulos ---
