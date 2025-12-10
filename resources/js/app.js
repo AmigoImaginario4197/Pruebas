@@ -8,6 +8,8 @@ import './citas.js';
 import './agenda.js';
 import './logs.js';
 import './mascota.js';
+import './alerts.js';
+import './task-form.js';
 
 window.bootstrap = bootstrap;
 

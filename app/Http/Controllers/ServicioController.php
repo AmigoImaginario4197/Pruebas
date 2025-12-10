@@ -9,18 +9,20 @@ use App\Http\Controllers\Controller;
 class ServicioController extends Controller
 {
     /**
-     * Muestra los detalles de un servicio específico.
-     */
-    public function show(Servicio $servicio)
-{
-    return view('servicios.show', compact('servicio'));
-}
-    /**
-     * Constructor: Solo el administrador puede acceder a cualquier método de este controlador.
+     * Constructor: Configuración de Permisos.
      */
     public function __construct()
     {
-        $this->middleware('role:admin');
+        // 1. Todos deben estar logueados
+        $this->middleware('auth');
+
+        // 2. PERMISOS DE LECTURA (Ver lista y detalles)
+        // Permitimos pasar a Admin y Veterinario solo a estas dos funciones.
+        $this->middleware('role:admin,veterinario')->only(['index', 'show']);
+
+        // 3. PERMISOS DE GESTIÓN (Crear, Editar, Borrar)
+        // Esto sigue siendo exclusivo del Admin.
+        $this->middleware('role:admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
     }
 
     /**
@@ -28,9 +30,16 @@ class ServicioController extends Controller
      */
     public function index()
     {
-        // Ordenamos por nombre y paginamos
         $servicios = Servicio::orderBy('nombre')->paginate(10);
         return view('servicios.index', compact('servicios'));
+    }
+
+    /**
+     * Muestra los detalles de un servicio específico.
+     */
+    public function show(Servicio $servicio)
+    {
+        return view('servicios.show', compact('servicio'));
     }
 
     /**
@@ -47,7 +56,6 @@ class ServicioController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // Usamos 'servicio' en singular porque así se llama tu tabla
             'nombre' => 'required|string|max:255|unique:servicio',
             'descripcion' => 'nullable|string|max:500',
             'precio' => 'required|numeric|min:0',
@@ -72,7 +80,6 @@ class ServicioController extends Controller
     public function update(Request $request, Servicio $servicio)
     {
         $validated = $request->validate([
-            // Ignoramos el ID actual para la validación de 'unique'
             'nombre' => 'required|string|max:255|unique:servicio,nombre,' . $servicio->id,
             'descripcion' => 'nullable|string|max:500',
             'precio' => 'required|numeric|min:0',

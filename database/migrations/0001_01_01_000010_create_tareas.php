@@ -8,6 +8,8 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('tareas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('asignado_a_id')->nullable()->after('user_id');
+            $table->string('especialidad_asignada')->nullable()->after('asignado_a_id');
             $table->string('titulo');
             $table->dateTime('inicio');
             $table->dateTime('fin');

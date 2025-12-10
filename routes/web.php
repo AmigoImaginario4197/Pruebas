@@ -47,28 +47,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // --- Mascotas ---
-    Route::get('/veterinario/mascotas', [MascotaController::class, 'indexVeterinario'])
-        ->name('veterinario.mascotas.index')
-        ->middleware('role:veterinario');
+  Route::get('/veterinario/pacientes', [MascotaController::class, 'indexVeterinario'])
+    ->name('veterinario.mascotas.index')
+    ->middleware('role:veterinario');
         
-    Route::resource('mascotas', MascotaController::class)->middleware('role:cliente,admin');
+Route::resource('mascotas', MascotaController::class)
+    ->except(['index']) 
+    ->middleware('role:cliente,admin,veterinario');
 
-    // --- CITAS (Lógica de Negocio) ---
-    // 1. Horarios 
-    Route::get('/api/horarios-disponibles', [CitaController::class, 'obtenerHorarios'])->name('api.horarios');
-    
-    // 2. Rutas específicas
-    Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');
-    Route::patch('/citas/{cita}/cancelar', [CitaController::class, 'cancelar'])->name('citas.cancelar');
-    
-    // 3. CRUD completo
-    Route::resource('citas', CitaController::class);
+// --- RUTAS PARA CITAS (Creación, pago, cancelación) ---
+Route::get('/api/horarios-disponibles', [CitaController::class, 'obtenerHorarios'])->name('api.horarios');
+Route::get('/citas/pago-exitoso/{cita}', [CitaController::class, 'pagoExitoso'])->name('citas.success');
+Route::patch('/citas/{cita}/cancelar', [CitaController::class, 'cancelar'])->name('citas.cancelar');
+Route::resource('citas', CitaController::class);
 
-    // --- AGENDA (Visualización) ---
-    Route::get('/agenda/data', [AgendaController::class, 'getEvents'])->name('agenda.data');
-    Route::get('/agenda', [AgendaController::class, 'index'])
-        ->name('agenda.index')
-        ->middleware('role:admin,veterinario');
+
+// --- RUTAS PARA LA VISTA DE AGENDA (Calendario) ---
+// Ruta para la llamada AJAX de FullCalendar para obtener los eventos.
+Route::get('/agenda/data', [AgendaController::class, 'getEvents'])->name('agenda.data');
+
+// Ruta para mostrar la página principal de la agenda.
+// Eliminamos el middleware 'role' para que todos los usuarios autenticados puedan verla.
+// El controlador se encargará de mostrar los datos correctos a cada rol.
+Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+
 
     // --- TAREAS INTERNAS ---
     Route::resource('tareas', TareaController::class);
@@ -79,17 +81,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // --- Otros Módulos ---
     Route::resource('tratamientos', TratamientoController::class);
     Route::resource('historial', HistorialMedicoController::class);
+    Route::resource('medicamentos', MedicamentoController::class);
+    Route::resource('servicios', ServicioController::class);
     
     // --- Solo Admin/Veterinario ---
     Route::middleware('role:admin,veterinario')->group(function() {
         Route::resource('disponibilidad', DisponibilidadController::class);
-        Route::resource('medicamentos', MedicamentoController::class);
     });
+
+    // --- Solo Veterinario ---
+  Route::get('/mascotas', [MascotaController::class, 'index'])
+    ->name('mascotas.index')
+    ->middleware('role:cliente,admin');
 
     // --- Solo Admin ---
     Route::middleware('role:admin')->group(function() {
         Route::resource('users', UserController::class);
-        Route::resource('servicios', ServicioController::class);
     });
-
+    
+    Route::get('/veterinario/pacientes', [MascotaController::class, 'indexVeterinario'])
+    ->name('veterinario.mascotas.index')
+    ->middleware('role:veterinario,admin');
 });

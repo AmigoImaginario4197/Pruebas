@@ -9,9 +9,9 @@ import * as bootstrap from 'bootstrap';
 document.addEventListener('DOMContentLoaded', function() {
     let calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
-
+    
     let routeUrl = calendarEl.getAttribute('data-route');
-
+    
     let calendar = new Calendar(calendarEl, {
         plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
         initialView: 'dayGridMonth',
@@ -29,69 +29,84 @@ document.addEventListener('DOMContentLoaded', function() {
         eventClick: function(info) {
             info.jsEvent.preventDefault();
             let props = info.event.extendedProps;
-            
-            // Llenar datos básicos del modal
-            document.getElementById('modalTitle').innerText = info.event.title;
-            
-            let start = info.event.start ? info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-            let end = info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-            document.getElementById('modalTime').innerText = `${info.event.start.toLocaleDateString()} | ${start} - ${end}`;
 
-            let modalResponsible = document.getElementById('modalResponsible');
-            let modalDescription = document.getElementById('modalDescription');
-            let modalActions = document.getElementById('modalActions');
+            // Elementos del modal
+            const modalTitle = document.getElementById('modalTitle');
+            const modalTime = document.getElementById('modalTime');
+            const modalResponsible = document.getElementById('modalResponsible');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalActions = document.getElementById('modalActions');
             
+            // Limpiar acciones anteriores
             modalActions.innerHTML = ''; 
 
+            // Llenar datos básicos
+            modalTitle.innerText = info.event.title;
+            const start = info.event.start ? info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            const end = info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            modalTime.innerText = `${info.event.start.toLocaleDateString()} | ${start} - ${end}`;
+
             if (props.type === 'appointment') {
-                // --- CITA ---
+                // --- LÓGICA PARA CITAS ---
                 modalResponsible.innerText = `Cliente: ${props.client} | Estado: ${props.status.toUpperCase()}`;
                 modalDescription.innerText = props.reason || 'Sin motivo';
-
-                if (props.can_edit) {
+                
+                if (props.view_url) { // Usamos la URL que viene del backend
                     modalActions.innerHTML = `
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                        <a href="${props.edit_url}" class="btn btn-primary">Gestionar Cita</a>
+                        <a href="${props.view_url}" class="btn btn-primary">Gestionar Cita</a>
                     `;
                 } else {
                     modalActions.innerHTML = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>`;
                 }
 
-            } else {
-                // --- TAREA INTERNA ---
-                modalResponsible.innerText = `Creado por: ${props.created_by}`;
-                modalDescription.innerText = props.notes || 'Sin notas';
+            } else if (props.type === 'task') {
+                // --- LÓGICA MEJORADA PARA TAREAS ---
+                
+                // 1. Asignación
+                let assignmentText = '';
+                if (props.assigned_to) {
+                    assignmentText = `Asignada a: <strong>${props.assigned_to}</strong>`;
+                } else if (props.assigned_specialty) {
+                    assignmentText = `Asignada a especialidad: <strong>${props.assigned_specialty}</strong>`;
+                } else {
+                    assignmentText = 'Asignación: <strong>General</strong>';
+                }
+                modalResponsible.innerHTML = assignmentText;
 
-                // Si es ADMIN (can_edit = true), puede editar/borrar
-                if (props.can_edit) {
-                    let deleteUrl = `/tareas/${props.source_id}`;
-                    let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                // 2. Descripción y creador
+                modalDescription.innerHTML = `
+                    <p class="mb-2"><strong>Notas:</strong> ${props.notes || 'Sin notas'}</p>
+                    <p class="text-muted small mt-3"><em>Tarea creada por: ${props.created_by}</em></p>
+                `;
+
+                // 3. Botones de Acción
+                if (props.can_edit) { // Si es ADMIN
+                    const deleteUrl = `/tareas/${props.source_id}`;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
                     modalActions.innerHTML = `
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                         <a href="${props.edit_url}" class="btn btn-primary me-2">Editar</a>
-                        
-                        <form action="${deleteUrl}" method="POST" onsubmit="return confirm('¿Borrar tarea?');" style="display:inline;">
+                        <form action="${deleteUrl}" method="POST" onsubmit="return confirm('¿Está seguro de que desea eliminar esta tarea?');" style="display:inline;">
                             <input type="hidden" name="_token" value="${csrfToken}">
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="submit" class="btn btn-danger">Eliminar</button>
                         </form>
                     `;
-                } else {
-                    // Si es VETERINARIO (can_edit = false), solo puede VER
-                    // Asumimos ruta: /tareas/{id}
-                    let showUrl = `/tareas/${props.source_id}`;
+                } else { // Si es VETERINARIO
                     modalActions.innerHTML = `
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                        <a href="${showUrl}" class="btn btn-info text-white">Ver Detalles</a>
+                        <a href="${props.view_url}" class="btn btn-info text-white">Ver Detalles</a>
                     `;
                 }
             }
-
-            let modalEl = document.getElementById('eventDetailModal');
-            let modal = new bootstrap.Modal(modalEl);
+            
+            // Mostrar el modal
+            const modalEl = document.getElementById('eventDetailModal');
+            const modal = new bootstrap.Modal(modalEl);
             modal.show();
         }
     });
-
     calendar.render();
 });

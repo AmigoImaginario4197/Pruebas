@@ -22,7 +22,8 @@
             {{-- === ENLACES DE GESTIÓN PARA CLIENTES Y PERSONAL === --}}
             {{-- Mascotas --}}
             <li>
-                @if(Auth::user()->isVeterinario())
+                @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
+                    {{-- Ruta específica para veterinarios si existe, sino usa la general --}}
                     <a href="{{ route('veterinario.mascotas.index') }}" class="{{ request()->routeIs('veterinario.mascotas.index') ? 'active' : '' }}"> 
                         <i class="bi bi-heart-pulse"></i> Mascotas
                     </a>
@@ -76,7 +77,7 @@
                 </li>
             @endif
 
-            {{-- === HERRAMIENTAS DE GESTIÓN INTERNA (SOLO PERSONAL) === --}}
+            {{-- === HERRAMIENTAS DE GESTIÓN INTERNA (SOLO PERSONAL: Admin + Vet) === --}}
             @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
                 <li>
                     <a href="{{ route('agenda.index') }}" class="{{ request()->routeIs('agenda.*') ? 'active' : '' }}">
@@ -98,29 +99,32 @@
                         <i class="bi bi-capsule-pill"></i> Gestión de Medicamentos
                     </a>
                 </li>
-            @endif
-
-            {{-- === PANEL ADMIN === --}}
-            @if(Auth::user()->isAdmin())
+                {{-- NUEVO: SERVICIOS AHORA VISIBLE PARA VETS (SOLO LECTURA) --}}
                 <li>
                     <a href="{{ route('servicios.index') }}" class="{{ request()->routeIs('servicios.*') ? 'active' : '' }}">
                         <i class="bi bi-tags-fill"></i> Servicios
                     </a>
                 </li>
+            @endif
+
+            {{-- === PANEL ADMIN === --}}
+            @if(Auth::user()->isAdmin())
                 <li>
                     <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i> Usuarios
                     </a>
                 </li>
                 <li>
+                    {{-- Cambiado el texto para que sea más claro --}}
                     <a href="{{ route('logs.index') }}" class="{{ request()->routeIs('logs.index') ? 'active' : '' }}">
                         <i class="bi bi-list-check"></i> Logs del Sistema
                     </a>
                 </li>
             @endif
 
-            {{-- LOGS PARA CLIENTE (NUEVO) --}}
-            @if(Auth::user()->isCliente())
+            {{-- === MI ACTIVIDAD (LOGS PERSONALES) === --}}
+            {{-- MODIFICADO: Ahora visible para Cliente Y Veterinario --}}
+            @if(Auth::user()->isCliente() || Auth::user()->isVeterinario())
                  <li>
                     <a href="{{ route('logs.index') }}" class="{{ request()->routeIs('logs.index') ? 'active' : '' }}">
                         <i class="bi bi-list-check"></i> Mi Actividad
@@ -140,4 +144,3 @@
         </ul>
     </nav>
 </div>
-

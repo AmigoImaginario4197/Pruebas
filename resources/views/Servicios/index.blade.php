@@ -23,9 +23,12 @@
                     <p>Gestiona los servicios y precios ofrecidos en la clínica.</p>
                 </div>
                 <div class="header-actions">
-                    <a href="{{ route('servicios.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Nuevo Servicio
-                    </a>
+                    {{-- PROTECCIÓN: Solo el Admin ve el botón de crear --}}
+                    @if(Auth::user()->isAdmin())
+                        <a href="{{ route('servicios.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo Servicio
+                        </a>
+                    @endif
                 </div>
             </header>
 
@@ -35,7 +38,6 @@
                 @endif
 
                 <div class="item-list">
-                    {{-- CORRECCIÓN: Aquí usamos $servicios, no $citas --}}
                     @forelse ($servicios as $servicio)
                         <div class="item-card">
                             {{-- Icono de etiqueta --}}
@@ -51,36 +53,39 @@
                             </div>
 
                             <div class="item-actions justify-content-end">
-                                {{-- Botón Ver --}}
+                                {{-- Botón Ver (Visible para Admin y Veterinario) --}}
                                 <a href="{{ route('servicios.show', $servicio) }}" class="btn btn-info btn-sm" title="Ver Detalles">
                                     <i class="bi bi-eye"></i>
                                 </a>
 
-                                {{-- Botón Editar --}}
-                                <a href="{{ route('servicios.edit', $servicio) }}" class="btn btn-warning btn-sm" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                {{-- PROTECCIÓN: Botones Editar/Borrar (Solo Admin) --}}
+                                @if(Auth::user()->isAdmin())
+                                    <a href="{{ route('servicios.edit', $servicio) }}" class="btn btn-warning btn-sm" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
 
-                                {{-- Botón Borrar --}}
-                                <form action="{{ route('servicios.destroy', $servicio) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este servicio?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                    <form action="{{ route('servicios.destroy', $servicio) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este servicio?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     @empty
                         <div class="empty-state-card">
                             <i class="bi bi-tags"></i>
                             <p>No hay servicios registrados.</p>
-                            <p>¡Crea el primero para empezar a ofrecer citas!</p>
+                            @if(Auth::user()->isAdmin())
+                                <p>¡Crea el primero para empezar a ofrecer citas!</p>
+                            @endif
                         </div>
                     @endforelse
                 </div>
                 
-                {{-- Paginación corregida --}}
+                {{-- Paginación --}}
                 <div class="mt-4 d-flex justify-content-center">
                     {{ $servicios->links() }}
                 </div>

@@ -18,6 +18,8 @@ class Tarea extends Model
         'fin',
         'color',
         'observaciones',
+        'asignado_a_id',   
+        'especialidad_asignada',
     ];
 
       protected $casts = [
@@ -33,5 +35,15 @@ class Tarea extends Model
     public function mascota()
     {
         return $this->belongsTo(Mascota::class, 'mascota_id');
+    }
+
+       public function creador()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function asignadoA()
+    {
+        return $this->belongsTo(User::class, 'asignado_a_id');
     }
 }

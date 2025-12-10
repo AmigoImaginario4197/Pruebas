@@ -30,9 +30,17 @@
                 </div>
                 <div class="header-actions">
                     {{-- Botón de "Volver" con color azul --}}
-                    <a href="{{ route('mascotas.index') }}" class="btn btn-primary">
-                        <i class="bi bi-arrow-left"></i> Volver al listado
-                    </a>
+                   @if(Auth::user()->rol === 'veterinario' || Auth::user()->rol === 'admin')
+    {{-- Si es Personal Médico: Vuelve al Buscador de Pacientes --}}
+    <a href="{{ route('veterinario.mascotas.index') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left"></i> Volver a Pacientes
+    </a>
+@else
+    {{-- Si es Cliente: Vuelve a "Mis Mascotas" --}}
+    <a href="{{ route('mascotas.index') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left"></i> Volver a Mis Mascotas
+    </a>
+@endif
                 </div>
             </header>
 
@@ -54,9 +62,11 @@
                                     <a href="{{ route('citas.create', ['mascota_id' => $mascota->id]) }}" class="btn btn-primary">
                                         <i class="bi bi-calendar-plus"></i> Agendar Cita
                                     </a>
+                                    @if(Auth::user()->isAdmin() || $mascota->user_id === Auth::id())
                                     <a href="{{ route('mascotas.edit', $mascota) }}" class="btn btn-warning">
                                         <i class="bi bi-pencil"></i> Editar
                                     </a>
+                                      @endif
                                 </div>
                             </div>
                         </div>

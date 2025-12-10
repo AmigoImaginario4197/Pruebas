@@ -27,9 +27,15 @@
                 </div>
                 <div class="header-actions">
                     {{-- BOTÓN CANCELAR CORREGIDO --}}
-                    <a href="{{ route('mascotas.index') }}" class="btn btn-secondary">
-                        <i class="bi bi-x-lg"></i> Cancelar
+                    @if(Auth::user()->rol === 'admin')
+                    <a href="{{ route('veterinario.mascotas.index') }}" class="btn btn-primary">
+                      <i class="bi bi-arrow-left"></i> Volver a Mascotas
                     </a>
+                    @else
+                    <a href="{{ route('mascotas.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-lg"></i> Volver a Mascotas
+                    </a>
+                    @endif
                 </div>
             </header>
 

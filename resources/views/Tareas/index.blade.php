@@ -18,12 +18,12 @@
 
         <main class="panel-main">
             <header class="panel-header">
+                {{-- (El header no cambia) --}}
                 <div class="header-title">
                     <h3>Tareas Internas</h3>
                     <p>Gestión de actividades administrativas y bloqueos de agenda.</p>
                 </div>
                 <div class="header-actions">
-                    {{-- Solo Admin puede crear --}}
                     @if(Auth::user()->isAdmin())
                         <a href="{{ route('tareas.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Nueva Tarea
@@ -39,11 +39,9 @@
 
                 <div class="item-list">
                     @forelse ($tareas as $tarea)
-                        {{-- TRUCO: Definimos la variable --task-color para que el editor no marque error --}}
                         <div class="item-card border-start border-4" 
                              style="--task-color: {{ $tarea->color }}; border-left-color: var(--task-color) !important;">
                             
-                            {{-- Usamos la variable CSS --}}
                             <div class="item-photo d-flex align-items-center justify-content-center text-white" 
                                  style="background-color: var(--task-color); font-size: 1.5rem;">
                                 <i class="bi bi-clipboard-check"></i>
@@ -57,16 +55,35 @@
                                     <i class="bi bi-arrow-right-short"></i> 
                                     {{ $tarea->fin->format('H:i') }}
                                 </p>
-                                <small class="text-secondary">Creado por: {{ $tarea->user->name ?? 'Sistema' }}</small>
+                                
+                                {{-- ============================================= --}}
+                                {{--    NUEVA SECCIÓN: INFORMACIÓN DE ASIGNACIÓN   --}}
+                                {{-- ============================================= --}}
+                                <p class="mb-2">
+                                    @if($tarea->asignadoA)
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-person-check-fill"></i> Asignada a: {{ $tarea->asignadoA->name }}
+                                        </span>
+                                    @elseif($tarea->especialidad_asignada)
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-briefcase-fill"></i> Especialidad: {{ $tarea->especialidad_asignada }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-people-fill"></i> Tarea General
+                                        </span>
+                                    @endif
+                                </p>
+                                
+                                {{-- CORRECCIÓN: Usamos ->creador en lugar de ->user --}}
+                                <small class="text-secondary">Creado por: {{ $tarea->creador->name ?? 'Sistema' }}</small>
                             </div>
 
                             <div class="item-actions">
-                                {{-- Ver Detalle (Todos) --}}
+                                {{-- (Los botones de acción no cambian) --}}
                                 <a href="{{ route('tareas.show', $tarea) }}" class="btn btn-secondary btn-sm" title="Ver detalle">
                                     <i class="bi bi-eye"></i>
                                 </a>
-
-                                {{-- Editar/Borrar (Solo Admin) --}}
                                 @if(Auth::user()->isAdmin())
                                     <a href="{{ route('tareas.edit', $tarea) }}" class="btn btn-warning btn-sm" title="Editar">
                                         <i class="bi bi-pencil"></i>

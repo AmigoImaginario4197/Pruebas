@@ -11,98 +11,148 @@
     
     <!-- Cargamos nuestro CSS maestro -->
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
-    
-    {{-- Estilos adicionales para el formulario --}}
-    <style>
-        .form-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        .form-group label { margin-bottom: 8px; font-weight: 600; color: #333; }
-        .form-group input, .form-group select {
-            padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;
-        }
-        .form-group .error-message { color: #ef4444; font-size: 0.875rem; margin-top: 5px; }
-        #photo-preview { max-width: 150px; max-height: 150px; margin-top: 10px; border-radius: 8px; border: 1px dashed #ccc; padding: 5px; display: none; }
-    </style>
-    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
     <div class="panel-container">
         
-        {{-- Incluimos el menú reutilizable --}}
         @include('layouts.sidebar')
 
-        <!-- Main Content -->
         <main class="panel-main">
             <header class="panel-header">
                 <div class="header-title">
-                    <h3>Añadir Nueva Mascota</h3>
-                    <p>Completa los datos de tu nuevo compañero.</p>
+                    <h3>Registrar Paciente</h3>
+                    <p>Completa los datos para crear una nueva ficha clínica.</p>
+                </div>
+                <div class="header-actions">
+                    {{-- Botón Volver inteligente (dependiendo del rol) --}}
+                    @if(Auth::user()->rol === 'veterinario')
+                        <a href="{{ route('veterinario.mascotas.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Pacientes
+                        </a>
+                    @else
+                        <a href="{{ route('mascotas.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                    @endif
                 </div>
             </header>
 
             <div class="panel-content">
-                <div class="form-container">
-                    {{-- El atributo enctype es CRUCIAL para subir archivos --}}
+                <div class="card shadow-sm border-0 p-4">
+                    
+                    {{-- Errores generales (opcional, pero útil) --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger mb-4">
+                            <strong>Por favor revisa los siguientes errores:</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form action="{{ route('mascotas.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div class="form-grid">
-                            
-                            <div class="form-group">
-                                <label for="nombre">Nombre</label>
-                                <input type="text" id="nombre" name="nombre" value="{{ old('nombre') }}" required>
-                                @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+
+                        {{-- ======================================================= --}}
+                        {{--    SECCIÓN DE ASIGNACIÓN DE DUEÑO (SOLO VET/ADMIN)      --}}
+                        {{-- ======================================================= --}}
+                        @if(Auth::user()->rol === 'veterinario' || Auth::user()->rol === 'admin')
+                            <div class="card bg-light border-0 mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-primary mb-3">
+                                        <i class="bi bi-person-badge"></i> Propietario de la Mascota
+                                    </h5>
+                                    
+                                    <div class="form-group">
+                                        <label for="user_id" class="form-label">Seleccionar Cliente</label>
+                                        <select name="user_id" id="user_id" class="form-select form-select-lg @error('user_id') is-invalid @enderror" required>
+                                            <option value="">-- Buscar cliente registrado --</option>
+                                            @foreach($clientes as $cliente)
+                                                <option value="{{ $cliente->id }}" {{ old('user_id') == $cliente->id ? 'selected' : '' }}>
+                                                    {{ $cliente->name }} ({{ $cliente->nif ?? 'Sin DNI' }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('user_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- ======================================================= --}}
+                        {{--    DATOS DE LA MASCOTA                                  --}}
+                        {{-- ======================================================= --}}
+                        <h5 class="mb-3 border-bottom pb-2">Datos del Paciente(Mascota)</h5>
+                        
+                        <div class="row g-3">
+                            {{-- Nombre --}}
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label fw-bold">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre') }}" required>
+                                @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="form-group">
-                                <label for="especie">Especie</label>
-                                <select id="especie" name="especie" required>
+                            {{-- Especie --}}
+                            <div class="col-md-6">
+                                <label for="especie" class="form-label fw-bold">Especie</label>
+                                <select id="especie" name="especie" class="form-select @error('especie') is-invalid @enderror" required>
                                     <option value="">-- Selecciona una especie --</option>
                                     <option value="Perro" {{ old('especie') == 'Perro' ? 'selected' : '' }}>Perro</option>
                                     <option value="Gato" {{ old('especie') == 'Gato' ? 'selected' : '' }}>Gato</option>
                                     <option value="Hamster" {{ old('especie') == 'Hamster' ? 'selected' : '' }}>Hamster</option>
                                     <option value="Conejo" {{ old('especie') == 'Conejo' ? 'selected' : '' }}>Conejo</option>
                                 </select>
-                                @error('especie') <span class="error-message">{{ $message }}</span> @enderror
+                                @error('especie') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             
-                            <div class="form-group">
-                                <label for="raza">Raza</label>
-                                <input type="text" id="raza" name="raza" value="{{ old('raza') }}">
-                                @error('raza') <span class="error-message">{{ $message }}</span> @enderror
+                            {{-- Raza --}}
+                            <div class="col-md-6">
+                                <label for="raza" class="form-label fw-bold">Raza</label>
+                                <input type="text" id="raza" name="raza" class="form-control @error('raza') is-invalid @enderror" value="{{ old('raza') }}">
+                                @error('raza') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="form-group">
-                                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
-                                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}">
-                                @error('fecha_nacimiento') <span class="error-message">{{ $message }}</span> @enderror
+                            {{-- Fecha Nacimiento --}}
+                            <div class="col-md-6">
+                                <label for="fecha_nacimiento" class="form-label fw-bold">Fecha de Nacimiento</label>
+                                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control @error('fecha_nacimiento') is-invalid @enderror" value="{{ old('fecha_nacimiento') }}">
+                                @error('fecha_nacimiento') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="form-group">
-                                <label for="edad">Edad (años)</label>
-                                <input type="number" id="edad" name="edad" value="{{ old('edad') }}">
-                                @error('edad') <span class="error-message">{{ $message }}</span> @enderror
+                            {{-- Edad --}}
+                            <div class="col-md-6">
+                                <label for="edad" class="form-label fw-bold">Edad (años)</label>
+                                <input type="number" id="edad" name="edad" class="form-control @error('edad') is-invalid @enderror" value="{{ old('edad') }}" min="0">
+                                @error('edad') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="form-group">
-                                <label for="peso">Peso (kg)</label>
-                                <input type="number" step="0.01" id="peso" name="peso" value="{{ old('peso') }}">
-                                @error('peso') <span class="error-message">{{ $message }}</span> @enderror
+                            {{-- Peso --}}
+                            <div class="col-md-6">
+                                <label for="peso" class="form-label fw-bold">Peso (kg)</label>
+                                <input type="number" step="0.01" id="peso" name="peso" class="form-control @error('peso') is-invalid @enderror" value="{{ old('peso') }}" min="0">
+                                @error('peso') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="form-group full-width">
-                                <label for="foto">Foto de la Mascota</label>
-                                <input type="file" id="foto" name="foto" onchange="previewImage(event)">
-                                <img id="photo-preview" src="#" alt="Vista previa de la foto" />
-                                @error('foto') <span class="error-message">{{ $message }}</span> @enderror
+                            {{-- Foto --}}
+                            <div class="col-12">
+                                <label for="foto" class="form-label fw-bold">Foto de la Mascota</label>
+                                <input type="file" id="foto" name="foto" class="form-control @error('foto') is-invalid @enderror" onchange="previewImage(event)" accept="image/*">
+                                <div class="mt-2">
+                                    <img id="photo-preview" src="#" alt="Vista previa" class="img-thumbnail d-none" style="max-height: 200px; object-fit: cover;">
+                                </div>
+                                @error('foto') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            
                         </div>
-                        <div style="text-align: right; margin-top: 20px;">
-                            <a href="{{ route('mascotas.index') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Guardar Mascota</button>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{{ route('mascotas.index') }}" class="btn btn-light border">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4">Guardar Mascota</button>
                         </div>
                     </form>
                 </div>
@@ -117,9 +167,11 @@
             reader.onload = function() {
                 const output = document.getElementById('photo-preview');
                 output.src = reader.result;
-                output.style.display = 'block';
+                output.classList.remove('d-none');
             };
-            reader.readAsDataURL(event.target.files[0]);
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
         }
     </script>
 </body>

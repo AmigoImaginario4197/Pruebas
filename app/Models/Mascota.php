@@ -37,11 +37,6 @@ class Mascota extends Model
         return $this->hasMany(HistorialMedico::class, 'mascota_id');
     }
 
-    public function planesDiarios()
-    {
-        return $this->hasMany(PlanDiario::class, 'mascota_id');
-    }
-
     public function tratamientos()
     {
         return $this->hasMany(Tratamiento::class, 'mascota_id');
