@@ -14,8 +14,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+       $user = User::find(Auth::id());
+               if (!$user) {
+            return redirect()->route('login'); }
 
         // 1. Conteo de Mascotas del usuario
         $conteoMascotas = $user->mascotas()->count();

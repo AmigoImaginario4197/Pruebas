@@ -3,62 +3,64 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Pago; 
+use Stripe\Stripe;
+use Stripe\Charge; 
 
 class PagoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return view('pagos.index'); 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        // 1. Validamos los datos
+        $request->validate([
+            'monto' => 'required|numeric|min:1', 
+            'stripeToken' => 'required',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // 2. Configuración de Stripe
+        Stripe::setApiKey(env('STRIPE_SECRET'));
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        try {
+            // 3. Procesar el cobro en Stripe
+            $charge = Charge::create([
+                "amount" => $request->monto * 100, 
+                "currency" => "eur",
+                "source" => $request->stripeToken,
+                "description" => "Pago ID Usuario: " . Auth::id()
+            ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+            $pago = new Pago();
+            
+            // Relación con el Usuario (Coincide con tu Model y BD)
+            $pago->user_id = Auth::id();
+            
+            // Datos del pago
+            $pago->monto = $request->monto;
+            $pago->estado = 'completado';
+            
+            // ID de transacción 
+            $pago->stripe_id = $charge->id; 
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            // Relación con Cita 
+            // Si el formulario envía un 'cita_id', lo guardamos. Si no, se queda NULL.
+            if ($request->has('cita_id')) {
+                $pago->cita_id = $request->cita_id;
+            }
+
+            $pago->save();
+
+            return redirect()
+                ->route('dashboard')
+                ->with('success', 'Pago realizado correctamente.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al procesar el pago: ' . $e->getMessage());
+        }
     }
 }

@@ -12,14 +12,16 @@ class Pago extends Model
     protected $table = 'pago';
 
     protected $fillable = [
+        'user_id',
+        'cita_id',
+        'stripe_id',
         'monto',
-        'metodo',
         'estado',
     ];
 
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function cita()
