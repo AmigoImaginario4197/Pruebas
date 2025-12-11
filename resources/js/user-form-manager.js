@@ -1,4 +1,3 @@
-// Este evento asegura que el código se ejecute solo cuando toda la página se ha cargado.
 document.addEventListener('DOMContentLoaded', function () {
 
     // Buscamos los elementos del formulario por su ID.

@@ -112,7 +112,11 @@ class DisponibilidadController extends Controller
             abort(403, 'No tienes permiso para editar este horario.');
         }
 
-        return view('disponibilidad.edit', compact('disponibilidad'));
+        // Cargamos la lista de veterinarios para poder llenar el <select> en la vista
+        $veterinarios = User::where('rol', 'veterinario')->get();
+
+        // Enviamos AMBAS variables: el horario a editar y la lista de doctores
+        return view('disponibilidad.edit', compact('disponibilidad', 'veterinarios'));
     }
 
     /**
@@ -120,25 +124,38 @@ class DisponibilidadController extends Controller
      */
     public function update(Request $request, Disponibilidad $disponibilidad)
     {
+        $user = Auth::user();
+
         // Seguridad
-        if (Auth::user()->rol === 'veterinario' && $disponibilidad->veterinario_id !== Auth::id()) {
+        if ($user->rol === 'veterinario' && $disponibilidad->veterinario_id !== $user->id) {
             abort(403, 'No tienes permiso para editar este horario.');
         }
 
-        $validated = $request->validate([
+        // Definimos las reglas
+        $rules = [
             'fecha' => 'required|date|after_or_equal:today',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
-        ]);
+        ];
 
-        $disponibilidad->update($validated);
-
-        if (Auth::user()->rol === 'admin') {
-            return redirect()->route('disponibilidad.index', ['veterinario_id' => $disponibilidad->veterinario_id])
-                             ->with('success', 'Bloque actualizado.');
+        // === MEJORA ===
+        // Si es ADMIN, validamos también el veterinario_id por si decidió cambiar el doctor asignado
+        if ($user->rol === 'admin') {
+            $rules['veterinario_id'] = 'required|exists:users,id';
         }
 
-        return redirect()->route('disponibilidad.index')->with('success', 'Bloque actualizado.');
+        $validated = $request->validate($rules);
+
+        // Actualizamos
+        $disponibilidad->update($validated);
+
+        // Redirección
+        if ($user->rol === 'admin') {
+            // Opcional: Podrías redirigir filtrando por ese veterinario si quisieras
+            return redirect()->route('disponibilidad.index')->with('success', 'Bloque actualizado correctamente.');
+        }
+
+        return redirect()->route('disponibilidad.index')->with('success', 'Tu horario ha sido actualizado.');
     }
 
     /**

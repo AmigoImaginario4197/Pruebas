@@ -23,10 +23,13 @@
                     <h3>Mi Disponibilidad</h3>
                     <p>Gestiona tus horarios disponibles para citas.</p>
                 </div>
-                <div class="header-actions">
+                
+                <div class="header-actions"> 
+                    @if(Auth::check() && Auth::user()->role === 'admin')
                     <a href="{{ route('disponibilidad.create') }}" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Añadir Bloque
                     </a>
+                    @endif
                 </div>
             </header>
 
@@ -46,13 +49,15 @@
                             </div>
                             
                             <div class="item-details">
-                                <h4>{{ \Carbon\Carbon::parse($disponibilidad->fecha)->isoFormat('dddd, D MMMM YYYY') }}</h4>
+                                <!-- CAMBIO AQUÍ: Agregar locale('es') -->
+                                <h4>{{ \Carbon\Carbon::parse($disponibilidad->fecha)->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</h4>
                                 <p>
                                     De <span class="badge bg-success">{{ \Carbon\Carbon::parse($disponibilidad->hora_inicio)->format('H:i') }}</span>
                                     a <span class="badge bg-danger">{{ \Carbon\Carbon::parse($disponibilidad->hora_fin)->format('H:i') }}</span>
                                 </p>
                             </div>
 
+                            @if(Auth::check() && Auth::user()->role === 'admin')
                             <div class="item-actions justify-content-end">
                                 <a href="{{ route('disponibilidad.edit', $disponibilidad) }}" class="btn btn-warning btn-sm" title="Editar">
                                     <i class="bi bi-pencil"></i>
@@ -65,6 +70,7 @@
                                     </button>
                                 </form>
                             </div>
+                            @endif
                         </div>
                     @empty
                         <div class="empty-state-card">

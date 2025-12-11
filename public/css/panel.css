@@ -1,8 +1,3 @@
-/* ===================================================================
-   PANEL.CSS - Hoja de Estilos Maestra para el Panel de Control
-   =================================================================== */
-
-/* --- ESTRUCTURA GENERAL DEL PANEL --- */
 .panel-container {
     display: flex;
     min-height: 100vh;
@@ -130,3 +125,4 @@
     .item-card { flex-direction: column; text-align: center; }
     .item-actions { justify-content: center; }
 }
+

@@ -63,7 +63,7 @@
 
                             <div class="item-actions justify-content-end">
                                 {{-- Ver (Todos) --}}
-                                <a href="{{ route('tratamientos.show', $tratamiento) }}" class="btn btn-info btn-sm" title="Ver Detalles">
+                                  <a href="{{ route('tratamientos.show', $tratamiento) }}" class="btn btn-secondary btn-sm" title="Ver Detalles">
                                     <i class="bi bi-eye"></i>
                                 </a>
 

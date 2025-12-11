@@ -1,0 +1,147 @@
+.historial-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.col-left {
+    flex: 2;
+    min-width: 300px;
+}
+
+.col-right {
+    flex: 1;
+    min-width: 250px;
+    padding-left: 30px;
+    border-left: 1px solid #f3f4f6;
+}
+
+/* === ENCABEZADOS Y TEXTOS === */
+.section-header {
+    margin-bottom: 25px;
+}
+
+.pet-name {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pet-details {
+    color: #6b7280;
+    margin: 5px 0 0 0;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    color: #111827;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* === CAJAS DE INFORMACIÓN === */
+.info-box {
+    margin-bottom: 25px;
+}
+
+.diagnosis-box {
+    padding: 20px;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    color: #374151;
+    line-height: 1.6;
+    border-left: 4px solid #4f46e5;
+}
+
+/* === TARJETAS DE ESTADO (TRATAMIENTO) === */
+.treatment-card {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.treatment-title {
+    color: #166534;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.treatment-desc {
+    font-size: 0.9rem;
+    color: #15803d;
+    margin-bottom: 15px;
+}
+
+.checkup-card {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.checkup-icon {
+    font-size: 2rem;
+    color: #9ca3af;
+}
+
+/* === TABLA INDEX === */
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.historial-table th {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 12px 24px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.historial-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+.historial-table tr:hover {
+    background-color: #f9fafb;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .col-right {
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid #f3f4f6;
+        padding-top: 30px;
+    }
+}

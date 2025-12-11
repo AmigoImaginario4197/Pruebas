@@ -127,3 +127,48 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Elementos del DOM
+    const servicioSelect = document.getElementById('servicio_id');
+    const totalPriceDisplay = document.getElementById('total-price');
+    const serviceNameDisplay = document.getElementById('service-name-display');
+    const hiddenPriceSpan = document.getElementById('service-price');
+
+    // Función para actualizar el precio
+    function updatePrice() {
+        if (!servicioSelect) return;
+
+        // Obtener la opción seleccionada
+        const selectedOption = servicioSelect.options[servicioSelect.selectedIndex];
+        
+        // Leer el precio del atributo data-price (o 0 si no hay nada)
+        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+        const name = selectedOption.text;
+
+        // Actualizar el texto en pantalla
+        if (totalPriceDisplay) {
+            totalPriceDisplay.textContent = price.toFixed(2) + ' €';
+        }
+        
+        // Actualizar el nombre del servicio en el resumen
+        if (serviceNameDisplay) {
+            // Si es la opción por defecto ("-- Selecciona --"), ponemos guiones
+            serviceNameDisplay.textContent = (price === 0) ? '--' : name;
+        }
+
+        // Actualizar el span oculto (por si tu otra lógica lo usa)
+        if (hiddenPriceSpan) {
+            hiddenPriceSpan.textContent = price;
+        }
+    }
+
+    // Escuchar cambios en el select de servicios
+    if (servicioSelect) {
+        servicioSelect.addEventListener('change', updatePrice);
+        
+        // Ejecutar una vez al cargar (por si hay un old value tras un error de validación)
+        updatePrice();
+    }
+});

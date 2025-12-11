@@ -51,14 +51,14 @@
             </li>
             @endif
 
-            {{-- Historial Médico (Solo personal clínico) --}}
-            @if(Auth::user()->isVeterinario() || Auth::user()->isAdmin())
+            {{-- Historial Médico --}}
+           
                 <li>
                     <a href="{{ route('historial.index') }}" class="{{ request()->routeIs('historial.*') ? 'active' : '' }}">
                         <i class="bi bi-collection"></i> Historiales Médicos
                     </a>
                 </li>
-            @endif
+           
 
             {{-- Tratamientos (Visible para todos) --}}
             <li>

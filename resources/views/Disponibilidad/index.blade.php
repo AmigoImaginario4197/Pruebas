@@ -30,9 +30,12 @@
                     </p>
                 </div>
                 <div class="header-actions">
+                    {{-- Botón Añadir Bloque solo para admin --}}
+                    @if(Auth::user()->rol === 'admin')
                     <a href="{{ route('disponibilidad.create') }}" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Añadir Bloque
                     </a>
+                    @endif
                 </div>
             </header>
 
@@ -79,13 +82,16 @@
                                 </div>
                                 
                                 <div class="item-details">
-                                    <h4>{{ \Carbon\Carbon::parse($disponibilidad->fecha)->isoFormat('dddd, D MMMM YYYY') }}</h4>
+                                    {{-- Agregado locale('es') para mostrar días en español --}}
+                                    <h4>{{ \Carbon\Carbon::parse($disponibilidad->fecha)->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</h4>
                                     <p>
                                         De <span class="badge bg-success">{{ \Carbon\Carbon::parse($disponibilidad->hora_inicio)->format('H:i') }}</span>
                                         a <span class="badge bg-danger">{{ \Carbon\Carbon::parse($disponibilidad->hora_fin)->format('H:i') }}</span>
                                     </p>
                                 </div>
-
+                                
+                                {{-- Botones solo para admin --}}
+                                @if(Auth::user()->rol === 'admin')
                                 <div class="item-actions justify-content-end">
                                     {{-- Botón Editar --}}
                                     <a href="{{ route('disponibilidad.edit', $disponibilidad) }}" class="btn btn-warning btn-sm" title="Editar">
@@ -101,12 +107,15 @@
                                         </button>
                                     </form>
                                 </div>
+                                @endif
                             </div>
                         @empty
                             <div class="empty-state-card">
                                 <i class="bi bi-calendar-x"></i>
                                 <p>No hay horarios de disponibilidad configurados.</p>
+                                @if(Auth::user()->rol === 'admin')
                                 <p>¡Haz clic en "Añadir Bloque" para empezar!</p>
+                                @endif
                             </div>
                         @endforelse
                     </div>

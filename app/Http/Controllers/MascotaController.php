@@ -43,52 +43,65 @@ class MascotaController extends Controller
 /**
  * Guarda la mascota en la base de datos.
  */
-public function store(Request $request)
-{
-    $user = Auth::user();
-    $esPersonal = ($user->rol === 'veterinario' || $user->rol === 'admin');
+ public function store(Request $request)
+    {
+        $user = Auth::user();
+        $esPersonal = ($user->rol === 'veterinario' || $user->rol === 'admin');
 
-    // 1. Reglas de validación base
-    $rules = [
-        'nombre' => 'required|string|max:255',
-        'especie' => ['required', Rule::in(['Perro', 'Gato', 'Hamster', 'Conejo'])],
-        'raza' => 'nullable|string|max:255',
-        'edad' => 'nullable|integer|min:0',
-        'peso' => 'nullable|numeric|min:0',
-        'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'fecha_nacimiento' => 'nullable|date',
-    ];
+        // 1. REGLAS DE VALIDACIÓN (Ahora raza, fecha y peso son OBLIGATORIOS)
+        $rules = [
+            'nombre' => 'required|string|max:255',
+            'especie' => ['required', Rule::in(['Perro', 'Gato', 'Hamster', 'Conejo', 'Ave', 'Otro'])],
+            
+            // CAMBIO IMPORTANTE: 'nullable' -> 'required'
+            'raza' => 'required|string|max:255',
+            'fecha_nacimiento' => 'required|date|before_or_equal:today', // No permite fechas futuras
+            'peso' => 'required|numeric|min:0.1', // Peso mínimo lógico
+            
+            // La edad puede ser nullable porque la calculamos o viene del form
+            'edad' => 'nullable|integer|min:0',
+            
+            // Foto sigue siendo opcional
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ];
 
-    // 2. Si es personal médico, validamos que haya elegido un dueño
-    if ($esPersonal) {
-        $rules['user_id'] = 'required|exists:users,id';
+        // 2. Si es personal médico, OBLIGAMOS a que elijan un dueño
+        if ($esPersonal) {
+            $rules['user_id'] = 'required|exists:users,id';
+        }
+
+        // Ejecutamos la validación
+        $validatedData = $request->validate($rules);
+
+        // 3. Procesar la foto
+        if ($request->hasFile('foto')) {
+            // Guardamos en 'mascotas' (asegúrate de que coincida con tu filesystem)
+            $rutaFoto = $request->file('foto')->store('mascotas', 'public');
+            $validatedData['foto'] = $rutaFoto;
+        }
+
+        // 4. Asignar el user_id correcto
+        if (!$esPersonal) {
+            // Si es un cliente normal, forzamos que el dueño sea él mismo.
+            // (Si es personal, el user_id ya viene dentro de $validatedData gracias a la validación anterior)
+            $validatedData['user_id'] = $user->id;
+        }
+
+        // 5. Crear la mascota
+        Mascota::create($validatedData);
+
+        // 6. Redirección Inteligente
+        // Admin y Veterinario van al panel de gestión
+        if ($esPersonal) {
+            return redirect()->route('veterinario.mascotas.index')
+                ->with('success', 'Paciente registrado correctamente en el sistema.');
+        }
+
+        // Clientes vuelven a su lista personal
+        return redirect()->route('mascotas.index')
+            ->with('success', '¡Has añadido una nueva mascota a tu familia!');
     }
-
-    $validatedData = $request->validate($rules);
-
-    // 3. Procesar la foto (Tu código original)
-    if ($request->hasFile('foto')) {
-        $rutaFoto = $request->file('foto')->store('fotos_mascotas', 'public');
-        $validatedData['foto'] = $rutaFoto;
-    }
-
-    // 4. Asignar el user_id correcto
-    if ($esPersonal) {
-        // Si es vet/admin, usamos el dueño que seleccionaron en el formulario
-        // (El valor ya viene en $validatedData porque lo validamos arriba en $rules['user_id'])
-    } else {
-        // Si es cliente, se asigna a sí mismo
-        $validatedData['user_id'] = $user->id;
-    }
-
-    Mascota::create($validatedData);
-
-    // 5. Redirección inteligente
-    if ($user->rol === 'veterinario') {
-        return redirect()->route('veterinario.mascotas.index')->with('success', 'Paciente registrado con éxito.');
-    }
-    return redirect()->route('mascotas.index')->with('success', '¡Mascota registrada con éxito!');
-}
+    
     /**
      * Muestra los detalles de una mascota específica en una página completa.
      */
@@ -110,70 +123,96 @@ public function store(Request $request)
     /**
      * Muestra el formulario para editar una mascota existente.
      */
-    public function edit(Mascota $mascota)
-{
-    $user = Auth::user();
+     public function edit(Mascota $mascota)
+    {
+        $user = Auth::user();
 
-    if ($user->rol !== 'admin' && $mascota->user_id !== $user->id) {
-        abort(403, 'Acción no autorizada. Solo el dueño o un administrador pueden editar esta ficha.');
+        // Si NO es admin Y TAMPOCO es el dueño -> Bloqueamos.
+        if ($user->rol !== 'admin' && $mascota->user_id !== $user->id) {
+            abort(403, 'Acción no autorizada. Solo el dueño o un administrador pueden editar esta ficha.');
+        }
+
+        return view('mascotas.edit', compact('mascota'));
     }
-    return view('mascotas.edit', compact('mascota'));
-}
 
     /**
      * Actualiza una mascota específica en la base de datos.
      */
     public function update(Request $request, Mascota $mascota)
     {
-        // Verificamos que la mascota pertenezca al usuario autenticado (Seguridad)
-        if ($mascota->user_id !== Auth::id()) {
+        $user = Auth::user();
+
+        // 1. CORRECCIÓN DE PERMISOS:
+        // Si NO es admin Y TAMPOCO es el dueño -> Error 403.
+        // (Esto permite que el admin pase).
+        if ($user->rol !== 'admin' && $mascota->user_id !== $user->id) {
             abort(403, 'Acción no autorizada.');
         }
 
-        $validatedData = $request->validate([
+        // 2. Validación
+        $request->validate([
             'nombre' => 'required|string|max:255',
-            'especie' => ['required', Rule::in(['Perro', 'Gato', 'Hamster', 'Conejo'])],
-            'raza' => 'nullable|string|max:255',
-            'edad' => 'nullable|integer|min:0',
-            'peso' => 'nullable|numeric|min:0',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'fecha_nacimiento' => 'nullable|date',
+            'especie' => 'required|string',
+            'foto' => 'nullable|image|max:2048', // Máximo 2MB
+            // Agrega aquí el resto de validaciones (raza, peso, etc.)
         ]);
 
+        // 3. Actualizar datos
+        $mascota->nombre = $request->nombre;
+        $mascota->especie = $request->especie;
+        $mascota->raza = $request->raza;
+        $mascota->fecha_nacimiento = $request->fecha_nacimiento;
+        $mascota->edad = $request->edad;
+        $mascota->peso = $request->peso;
+
+        // 4. Manejo de la Foto (Si subieron una nueva)
         if ($request->hasFile('foto')) {
-            // Si hay una foto nueva, primero borramos la antigua si existe
+            // Borrar la vieja si existe
             if ($mascota->foto) {
                 Storage::disk('public')->delete($mascota->foto);
             }
-            // Guardamos la nueva foto
-            $rutaFoto = $request->file('foto')->store('fotos_mascotas', 'public');
-            $validatedData['foto'] = $rutaFoto;
+            // Guardar la nueva
+            $mascota->foto = $request->file('foto')->store('mascotas', 'public');
         }
 
-        $mascota->update($validatedData);
+        $mascota->save();
 
-        return redirect()->route('mascotas.index')->with('success', '¡Datos de la mascota actualizados!');
+        // 5. Redirección inteligente
+        $ruta = ($user->rol === 'admin' || $user->rol === 'veterinario') 
+            ? 'veterinario.mascotas.index' 
+            : 'mascotas.index';
+
+        return redirect()->route($ruta)->with('success', 'Mascota actualizada correctamente.');
     }
 
     /**
      * Elimina una mascota específica de la base de datos.
      */
-    public function destroy(Mascota $mascota)
+        public function destroy(Mascota $mascota)
     {
-        // Verificamos que la mascota pertenezca al usuario autenticado (Seguridad)
-        if ($mascota->user_id !== Auth::id()) {
+        $user = Auth::user();
+
+        // 1. Verificación de seguridad (Admin o Dueño)
+        if ($user->rol !== 'admin' && $mascota->user_id !== $user->id) {
             abort(403, 'Acción no autorizada.');
         }
 
-        // Si la mascota tiene una foto asociada, la eliminamos del almacenamiento
+        // 2. Eliminar foto si existe
         if ($mascota->foto) {
             Storage::disk('public')->delete($mascota->foto);
         }
 
-        // Eliminamos el registro de la base de datos
+        // 3. Eliminar registro
         $mascota->delete();
 
-        return redirect()->route('mascotas.index')->with('success', '¡Mascota eliminada con éxito!');
+        // 4. Lógica de Redirección (Tal como la pediste)
+        if ($user->rol === 'admin') {
+            return redirect()->route('veterinario.mascotas.index')
+                ->with('success', 'Mascota eliminada por Administración.');
+        } else {
+            return redirect()->route('mascotas.index')
+                ->with('success', 'Mascota eliminada correctamente.');
+        }
     }
 
     public function indexVeterinario(Request $request)

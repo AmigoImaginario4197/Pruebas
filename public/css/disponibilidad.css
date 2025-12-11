@@ -1,0 +1,51 @@
+.disp-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.disp-col {
+    flex: 1;
+    min-width: 300px;
+}
+
+.disp-col-right {
+    border-left: 1px solid #f3f4f6;
+    padding-left: 30px;
+}
+
+/* === ESTILOS ESPECÍFICOS DE HORA === */
+.time-input-group {
+    background-color: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+
+.time-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Hacer los inputs de hora más grandes y legibles */
+input[type="time"] {
+    font-size: 1.2rem;
+    padding: 10px;
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .disp-col-right {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #f3f4f6;
+        padding-top: 30px;
+    }
+}

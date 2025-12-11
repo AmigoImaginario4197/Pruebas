@@ -3,124 +3,151 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar a {{ $mascota->nombre }} - Pet Care</title>
+    <title>Editar Mascota - Pet Care</title>
     
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/mascota.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/perfil.css') }}">
     
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/mascota-form.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-light">
+<body class="font-sans antialiased">
     <div class="panel-container">
         
         @include('layouts.sidebar')
 
         <main class="panel-main">
+            
+            @php
+                $user = Auth::user();
+                $rutaVolver = ($user->rol === 'admin' || $user->rol === 'veterinario') 
+                    ? route('veterinario.mascotas.index') 
+                    : route('mascotas.index');
+            @endphp
+
             <header class="panel-header">
                 <div class="header-title">
-                    <h3>Editando a: {{ $mascota->nombre }}</h3>
-                    <p>Actualiza la información de tu mascota.</p>
+                    <h3>Editar Paciente: {{ $mascota->nombre }}</h3>
+                    <p>Actualiza la información de la ficha clínica.</p>
                 </div>
                 <div class="header-actions">
-                    {{-- BOTÓN CANCELAR CORREGIDO --}}
-                    @if(Auth::user()->rol === 'admin')
-                    <a href="{{ route('veterinario.mascotas.index') }}" class="btn btn-primary">
-                      <i class="bi bi-arrow-left"></i> Volver a Mascotas
+                    <a href="{{ $rutaVolver }}" class="btn btn-secondary text-white">
+                        <i class="bi bi-arrow-left"></i> Volver
                     </a>
-                    @else
-                    <a href="{{ route('mascotas.index') }}" class="btn btn-secondary">
-                        <i class="bi bi-x-lg"></i> Volver a Mascotas
-                    </a>
-                    @endif
                 </div>
             </header>
 
             <div class="panel-content">
-                <form action="{{ route('mascotas.update', $mascota->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PATCH')
-                    
-                    <div class="row g-4">
-                        {{-- COLUMNA IZQUIERDA: FOTO --}}
-                        <div class="col-lg-4">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-body p-4 photo-upload-container">
-                                    <h5 class="fw-bold mb-4">Foto de Perfil</h5>
-                                    
-                                    {{-- Previsualización de imagen --}}
-                                    <img id="image-preview" 
-                                         src="{{ $mascota->foto ? asset('storage/' . $mascota->foto) : asset('images/placeholder-pet.png') }}" 
-                                         alt="Previsualización" class="photo-upload-preview">
-                                    
-                                    {{-- El input está oculto, se activa con el label --}}
-                                    <input class="d-none" type="file" id="foto" name="foto" onchange="previewImage(event)">
-                                    <small class="form-text text-muted d-block mt-2">Dejar en blanco para no cambiar.</small>
-                                    @error('foto')
-                                        <div class="text-danger mt-1 small">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                <div class="profile-card">
+                    <form action="{{ route('mascotas.update', $mascota->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+
+                        <!-- DATOS MASCOTA -->
+                        <h5>Datos del Paciente</h5>
+                        <p class="subtitle">Modifica los datos necesarios.</p>
+                        
+                        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1; min-width: 300px;">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" class="form-control" 
+                                       value="{{ old('nombre', $mascota->nombre) }}" 
+                                       required placeholder="Ej: Max">
+                                @error('nombre') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="form-group" style="flex: 1; min-width: 300px;">
+                                <label for="especie" class="form-label">Especie</label>
+                                <select id="especie" name="especie" class="form-control" required>
+                                    <option value="">-- Selecciona --</option>
+                                    @foreach(['Perro', 'Gato', 'Hamster', 'Conejo'] as $esp)
+                                        <option value="{{ $esp }}" {{ old('especie', $mascota->especie) == $esp ? 'selected' : '' }}>
+                                            {{ $esp }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('especie') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
                         </div>
 
-                        {{-- COLUMNA DERECHA: DATOS --}}
-                        <div class="col-lg-8">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-body p-4">
-                                    <h5 class="fw-bold mb-4">Información General</h5>
+                        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1; min-width: 250px;">
+                                <label for="raza" class="form-label">Raza</label>
+                                <input type="text" id="raza" name="raza" class="form-control" 
+                                       value="{{ old('raza', $mascota->raza) }}" 
+                                       required placeholder="Ej: Labrador">
+                                @error('raza') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                            </div>
 
-                                    <div class="mb-3">
-                                        <label for="nombre" class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ old('nombre', $mascota->nombre) }}" required>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="especie" class="form-label">Especie</label>
-                                            <select class="form-select" id="especie" name="especie" required>
-                                                <option value="Perro" {{ old('especie', $mascota->especie) == 'Perro' ? 'selected' : '' }}>Perro</option>
-                                                <option value="Gato" {{ old('especie', $mascota->especie) == 'Gato' ? 'selected' : '' }}>Gato</option>
-                                                <option value="Hamster" {{ old('especie', $mascota->especie) == 'Hamster' ? 'selected' : '' }}>Hamster</option>
-                                                <option value="Conejo" {{ old('especie', $mascota->especie) == 'Conejo' ? 'selected' : '' }}>Conejo</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="raza" class="form-label">Raza</label>
-                                            <input type="text" class="form-control" id="raza" name="raza" value="{{ old('raza', $mascota->raza) }}">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edad" class="form-label">Edad (años)</label>
-                                            <input type="number" class="form-control" id="edad" name="edad" value="{{ old('edad', $mascota->edad) }}">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="peso" class="form-label">Peso (kg)</label>
-                                            <input type="number" step="0.1" class="form-control" id="peso" name="peso" value="{{ old('peso', $mascota->peso) }}">
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-                                        <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ old('fecha_nacimiento', $mascota->fecha_nacimiento) }}">
-                                    </div>
-                                </div>
+                            <div class="form-group" style="flex: 1; min-width: 250px;">
+                                <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" 
+                                       class="form-control" 
+                                       value="{{ old('fecha_nacimiento', $mascota->fecha_nacimiento ? \Carbon\Carbon::parse($mascota->fecha_nacimiento)->format('Y-m-d') : '') }}" 
+                                       required
+                                       max="{{ date('Y-m-d') }}"> 
+                                @error('fecha_nacimiento') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Botón de envío --}}
-                    <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-check-circle"></i> Actualizar Datos
-                        </button>
-                    </div>
-                </form>
+                        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1; min-width: 150px;">
+                                <label for="edad" class="form-label">Edad (Años)</label>
+                                <input type="number" id="edad" name="edad" class="form-control" 
+                                       value="{{ old('edad', $mascota->edad) }}" 
+                                       min="0" readonly style="background-color: #f3f4f6;">
+                                <small class="text-muted">Se calcula automáticamente.</small>
+                            </div>
+
+                            <div class="form-group" style="flex: 1; min-width: 150px;">
+                                <label for="peso" class="form-label">Peso (kg)</label>
+                                <input type="number" step="0.01" id="peso" name="peso" class="form-control" 
+                                       value="{{ old('peso', $mascota->peso) }}" 
+                                       required min="0.1">
+                                @error('peso') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <!-- FOTO -->
+                        <div class="form-group">
+                            <label for="foto" class="form-label">Foto de la Mascota</label>
+                            
+                            @if($mascota->foto)
+                                <div class="mb-3">
+                                    <p class="text-sm text-gray-500 mb-1">Foto Actual:</p>
+                                    <img src="{{ asset('storage/' . $mascota->foto) }}" alt="Foto actual" 
+                                         style="height: 100px; border-radius: 8px; border: 1px solid #ddd;">
+                                </div>
+                            @endif
+
+                            <input type="file" id="foto" name="foto" class="form-control" accept="image/*">
+                            
+                            <div class="mt-3">
+                                <img id="photo-preview" src="#" alt="Vista previa" class="d-none" 
+                                     style="max-height: 200px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;">
+                            </div>
+                            @error('foto') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                        </div>
+
+                        <!-- BOTONES -->
+                        <div class="d-flex align-items-center mt-4 pt-3 border-top" style="justify-content: flex-end; gap: 15px;">
+                            <a href="{{ $rutaVolver }}" class="btn btn-secondary text-white" style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 6px; background-color: #6c757d;">Cancelar</a>
+                            
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-arrow-repeat"></i> Actualizar Mascota
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
             </div>
         </main>
     </div>
+
+    <script src="{{ asset('js/mascota.js') }}"></script>
 </body>
 </html>

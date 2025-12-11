@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\Tratamiento;
 
 class HistorialMedicoController extends Controller
 {
@@ -42,38 +43,57 @@ class HistorialMedicoController extends Controller
      * Muestra el formulario para crear un nuevo historial.
      */
     public function create()
-    {
-        // Admin/Vet pueden añadir historial a cualquier mascota
-        $mascotas = Mascota::with('usuario')->get();
-        return view('historial.create', compact('mascotas'));
-    }
+{
+    // 1. Cargamos las mascotas para saber a quién le pasó algo
+    $mascotas = Mascota::with('usuario')->get();
+
+    // 2. Cargamos los tratamientos disponibles para poder vincular uno (si aplica)
+    //    Esto es lo que faltaba y causaba el error "Undefined variable"
+    $tratamientos = Tratamiento::all(); 
+
+    return view('historial.create', compact('mascotas', 'tratamientos'));
+}
 
     /**
      * Guarda un nuevo historial médico.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'mascota_id' => 'required|exists:mascota,id', // tabla 'mascota'
-            'tipo' => 'required|string|max:100', // Ej: "Vacunación", "Consulta", "Cirugía"
-            'descripcion' => 'required|string',
-            'fecha' => 'required|date',
-        ]);
+{
+    // 1. Validación adaptada a la nueva vista
+    $validated = $request->validate([
+        // Verifica si tu tabla es 'mascotas' o 'mascota'. Lo normal es plural.
+        'mascota_id' => 'required|exists:mascota,id', 
+        
+        'fecha' => 'required|date|before_or_equal:today',
+        'descripcion' => 'required|string',
+        
+        // Permitimos que sea null (chequeo) o un ID válido
+        'tratamiento_id' => 'nullable|exists:tratamientos,id', 
+    ]);
 
-        HistorialMedico::create($request->all());
+    // 2. Si tenías un campo 'tipo' en la base de datos y no quieres borrarlo,
+    // podemos rellenarlo automáticamente para que no dé error SQL.
+    // Si ya borraste la columna 'tipo' de la BD, borra esta línea.
+    $validated['tipo'] = 'Consulta / Historial'; 
 
-        return redirect()->route('historial.index')->with('success', 'Historial médico añadido correctamente.');
-    }
+    // 3. Crear el registro
+    // Asegúrate de importar el modelo correcto arriba (Historial o HistorialMedico)
+    \App\Models\HistorialMedico::create($validated);
+
+    return redirect()->route('historial.index')
+        ->with('success', 'Historial médico añadido correctamente.');
+}
 
     /**
      * Muestra los detalles de un historial.
      */
     public function show($id)
     {
-        $historial = HistorialMedico::with('mascota')->findOrFail($id);
+        // CARGAMOS RELACIONES: Mascota y Tratamiento (vital para el nuevo diseño)
+        $historial = HistorialMedico::with(['mascota', 'tratamiento'])->findOrFail($id);
         $user = Auth::user();
 
-        // Seguridad: Si es cliente, verifica que la mascota sea suya
+        // Seguridad: Cliente solo ve lo suyo
         if ($user->rol === 'cliente' && $historial->mascota->user_id !== $user->id) {
             abort(403, 'No tienes permiso para ver este historial.');
         }
@@ -87,27 +107,35 @@ class HistorialMedicoController extends Controller
     public function edit($id)
     {
         $historial = HistorialMedico::findOrFail($id);
-        $mascotas = Mascota::with('usuario')->get();
         
-        return view('historial.edit', compact('historial', 'mascotas'));
+        // Cargamos mascotas y tratamientos para los selectores
+        $mascotas = Mascota::with('usuario')->get();
+        $tratamientos = \App\Models\Tratamiento::all(); // <--- IMPORTANTE: Faltaba esto
+        
+        return view('historial.edit', compact('historial', 'mascotas', 'tratamientos'));
     }
 
     /**
      * Actualiza el historial.
      */
-    public function update(Request $request, $id)
+     public function update(Request $request, $id)
     {
         $historial = HistorialMedico::findOrFail($id);
 
-        $request->validate([
-            'tipo' => 'required|string|max:100',
+        // Validación actualizada (Igual que en Store)
+        $validated = $request->validate([
+            // 'mascota_id' normalmente no se edita en historial, pero si quieres permitirlo:
+            // 'mascota_id' => 'required|exists:mascota,id', 
+            
+            'fecha' => 'required|date|before_or_equal:today',
             'descripcion' => 'required|string',
-            'fecha' => 'required|date',
+            'tratamiento_id' => 'nullable|exists:tratamientos,id', // <--- Nuevo campo
         ]);
 
-        $historial->update($request->only(['tipo', 'descripcion', 'fecha']));
+        // Actualizamos (Usamos $validated directamente)
+        $historial->update($validated);
 
-        return redirect()->route('historial.index')->with('success', 'Historial médico actualizado.');
+        return redirect()->route('historial.index')->with('success', 'Historial médico actualizado correctamente.');
     }
 
     /**

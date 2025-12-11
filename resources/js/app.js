@@ -10,6 +10,7 @@ import './logs.js';
 import './mascota.js';
 import './alerts.js';
 import './task-form.js';
+import './tratamientos.js';
 
 window.bootstrap = bootstrap;
 
