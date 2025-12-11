@@ -61,7 +61,7 @@
                             </div>
                             <div class="col-md-3 d-flex mt-3 mt-md-0">
                                 <button type="submit" class="btn btn-secondary w-100 me-2">Filtrar</button>
-                                <a href="{{ route('users.index') }}" class="btn btn-light w-100 border">Limpiar</a>
+                                <a href="{{ route('users.index') }}" class="btn btn-danger w-100 border">Limpiar</a>
                             </div>
                         </form>
                     </div>

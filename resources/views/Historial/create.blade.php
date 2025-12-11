@@ -65,19 +65,20 @@
                                     @error('fecha') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                                 </div>
                                 
-                                <!-- Tratamiento Vinculado (Opcional o Requerido según tu lógica) -->
+                                <!-- Tratamiento Vinculado -->
                                 <div class="form-group">
                                     <label for="tratamiento_id" class="form-label">Tratamiento Vinculado (Opcional)</label>
                                     <select name="tratamiento_id" id="tratamiento_id" class="form-control">
-                                        <option value="">-- Ninguno / Solo Chequeo --</option>
+                                        <!-- Opción por defecto corregida a tu gusto -->
+                                        <option value="">-- Ninguno, solo chequeo --</option>
+                                        
                                         @foreach ($tratamientos as $tratamiento)
-                                            {{-- Mostramos el nombre del tratamiento y quizás la fecha --}}
                                             <option value="{{ $tratamiento->id }}" @selected(old('tratamiento_id') == $tratamiento->id)>
-                                                {{ $tratamiento->tipo }} - {{ \Str::limit($tratamiento->descripcion, 30) }}
+                                                {{ $tratamiento->diagnostico ?? $tratamiento->descripcion ?? 'Tratamiento #' . $tratamiento->id }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted">Si este evento conllevó medicación, selecciónala aquí.</small>
+                                    <small class="text-muted">Selecciona el tratamiento realizado.</small>
                                     @error('tratamiento_id') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                                 </div>
                             </div>
@@ -88,7 +89,7 @@
 
                                 <!-- Descripción -->
                                 <div class="form-group">
-                                    <label for="descripcion" class="form-label">Detalles Clínicos</label>
+                                    <label for="descripcion" class="form-label">Detalles Clínicos / Diagnóstico</label>
                                     <textarea name="descripcion" id="descripcion" class="form-control" rows="8" 
                                               placeholder="Describe qué le ocurrió a la mascota, síntomas observados y diagnóstico final..." required>{{ old('descripcion') }}</textarea>
                                     @error('descripcion') <div class="text-danger mt-1">{{ $message }}</div> @enderror

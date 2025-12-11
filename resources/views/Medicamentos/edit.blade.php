@@ -7,6 +7,10 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
+    
+    <!-- 1. Reutilizamos el CSS de medicamentos -->
+    <link rel="stylesheet" href="{{ asset('css/medicamentos-form.css') }}">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
@@ -16,73 +20,112 @@
         <main class="panel-main">
             <header class="panel-header">
                 <div class="header-title">
-                    <h3>Editar Medicamento: {{ $medicamento->nombre }}</h3>
-                    <p>Modifica los datos del medicamento.</p>
+                    <h3>Editar Medicamento</h3>
+                    <p>Modificando datos de: <strong>{{ $medicamento->nombre }}</strong></p>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ route('medicamentos.index') }}" class="btn btn-secondary text-white">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
                 </div>
             </header>
 
             <div class="panel-content">
-                <div class="card">
-                    {{-- El formulario apunta a 'update' y usa el método PATCH --}}
+                <div class="med-card">
+                    
                     <form action="{{ route('medicamentos.update', $medicamento) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PATCH')
 
-                        <div class="card-body">
-                            @if ($errors->any())
-                                <div class="alert alert-danger mb-4">
-                                    <h5 class="alert-heading">Error de Validación</h5>
-                                    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-                                </div>
-                            @endif
+                        <div class="med-header">
+                            <!-- Color naranja para indicar edición -->
+                            <h4 style="color: #d97706;"><i class="bi bi-pencil-square"></i> Editar Datos</h4>
+                        </div>
 
-                            <div class="row">
-                                {{-- Nombre del Medicamento --}}
-                                <div class="col-12 mb-3">
-                                    <label for="nombre" class="form-label">Nombre del Medicamento</label>
-                                    <input type="text" class="form-control @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre', $medicamento->nombre) }}" required>
-                                    @error('nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <!-- Errores -->
+                        @if ($errors->any())
+                            <div class="alert alert-danger mb-4">
+                                <ul class="mb-0 small">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                            </div>
+                        @endif
+
+                        <div class="med-grid-layout">
+                            
+                            <!-- COLUMNA 1: FORMULARIO -->
+                            <div class="form-section">
+                                
+                                <!-- Nombre -->
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre del Medicamento <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                        <input type="text" class="form-control @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre', $medicamento->nombre) }}" required>
+                                    </div>
+                                    @error('nombre')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                 </div>
                                 
-                                {{-- Dosis Recomendada --}}
-                                <div class="col-12 mb-3">
+                                <!-- Dosis -->
+                                <div class="mb-3">
                                     <label for="dosis_recomendada" class="form-label">Dosis Recomendada</label>
-                                    <input type="text" class="form-control @error('dosis_recomendada') is-invalid @enderror" id="dosis_recomendada" name="dosis_recomendada" value="{{ old('dosis_recomendada', $medicamento->dosis_recomendada) }}">
-                                    @error('dosis_recomendada')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-prescription2"></i></span>
+                                        <input type="text" class="form-control @error('dosis_recomendada') is-invalid @enderror" id="dosis_recomendada" name="dosis_recomendada" value="{{ old('dosis_recomendada', $medicamento->dosis_recomendada) }}">
+                                    </div>
+                                    @error('dosis_recomendada')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                 </div>
 
-                                {{-- Descripción --}}
-                                <div class="col-12 mb-3">
-                                    <label for="descripcion" class="form-label">Descripción (Opcional)</label>
-                                    <textarea class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" name="descripcion" rows="4">{{ old('descripcion', $medicamento->descripcion) }}</textarea>
-                                    @error('descripcion')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <!-- Descripción -->
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" name="descripcion" rows="5">{{ old('descripcion', $medicamento->descripcion) }}</textarea>
+                                    @error('descripcion')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                 </div>
+                            </div>
 
-                                {{-- Campo para cambiar la Foto --}}
-                                <div class="col-12 mb-3">
-                                    <label for="foto" class="form-label">Cambiar Foto (Opcional)</label>
-                                    <input class="form-control @error('foto') is-invalid @enderror" type="file" id="foto" name="foto">
-                                    @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <!-- COLUMNA 2: IMAGEN (Lógica inteligente) -->
+                            <div class="image-section">
+                                <label class="form-label d-block text-center">Fotografía</label>
 
-                                    {{-- Muestra la foto actual si existe --}}
+                                <label for="foto" class="image-upload-zone">
+                                    
+                                    {{-- LÓGICA: Si ya hay foto, la mostramos y ocultamos el placeholder --}}
                                     @if($medicamento->foto)
-                                        <div class="mt-3">
-                                            <p class="mb-1"><small>Foto actual:</small></p>
-                                            <img src="{{ asset('storage/' . $medicamento->foto) }}" alt="Foto de {{ $medicamento->nombre }}" class="img-thumbnail" style="max-width: 150px;">
-                                        </div>
+                                        <img id="preview" src="{{ asset('storage/' . $medicamento->foto) }}" class="preview-img" style="display: block;">
+                                        
+                                        {{-- El placeholder se renderiza con opacity 0 para que no estorbe --}}
+                                        <div class="upload-placeholder" style="opacity: 0;">
+                                    @else
+                                        {{-- Si no hay foto, comportamiento normal --}}
+                                        <img id="preview" src="#" class="preview-img">
+                                        <div class="upload-placeholder">
                                     @endif
-                                </div>
+                                            
+                                        <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                                        <p class="mb-0 fw-bold">Cambiar Imagen</p>
+                                        <small class="text-muted">Haz clic para reemplazar</small>
+                                    </div>
+
+                                    <input type="file" id="foto" name="foto" accept="image/*" class="d-none">
+                                </label>
+                                @error('foto')<div class="text-danger small mt-1 text-center">{{ $message }}</div>@enderror
                             </div>
                         </div>
 
-                        <div class="card-footer text-end">
-                            <a href="{{ route('medicamentos.index') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <!-- FOOTER -->
+                        <div class="med-footer">
+                            <a href="{{ route('medicamentos.index') }}" class="btn btn-light border">Cancelar</a>
+                            
+                            <button type="submit" class="btn btn-warning" style="font-weight: 600;">
+                                <i class="bi bi-check-circle me-1"></i> Guardar Cambios
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- 2. Cargamos el mismo JS. Funciona porque busca el ID 'foto' y el ID 'preview' que hemos mantenido -->
+    <script src="{{ asset('js/medicamentos-preview.js') }}"></script>
 </body>
 </html>

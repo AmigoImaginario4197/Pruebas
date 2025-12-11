@@ -54,7 +54,7 @@
 
                             <div class="item-actions justify-content-end">
                                 {{-- Botón Ver (Visible para Admin y Veterinario) --}}
-                                <a href="{{ route('servicios.show', $servicio) }}" class="btn btn-info btn-sm" title="Ver Detalles">
+                                <a href="{{ route('servicios.show', $servicio) }}" class="btn btn-secondary btn-sm" title="Ver Detalles">
                                     <i class="bi bi-eye"></i>
                                 </a>
 
